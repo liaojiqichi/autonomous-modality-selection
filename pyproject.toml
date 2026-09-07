@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autonomous-modality-selection"
+version = "0.1.0"
+description = "Research prototype for autonomous scientific input-modality selection"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [{ name = "Gefei Wang" }]
+dependencies = [
+  "pydantic>=2.10,<3",
+]
+
+[project.scripts]
+ams-demo = "autonomous_modality.cli:main"
+
+[project.optional-dependencies]
+pilot = [
+  "rasterio>=1.4,<2",
+  "matplotlib>=3.9,<4",
+]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<7",
+  "ruff>=0.9,<1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/autonomous_modality"]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers -ra"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

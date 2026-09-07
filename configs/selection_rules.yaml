@@ -1,0 +1,26 @@
+schema_version: "2.0"
+rule_version: "input-richness-baseline-1.2"
+capability_deduplication: trim and case-fold before scoring and reporting predicted capabilities
+evaluation_rule_version: "solution-richness-counts-1.1"
+objective: >-
+  Select input data modalities predicted to expand analytical approaches,
+  explanatory perspectives, and cross-modal relationships.
+hard_rules:
+  ASSET_UNAVAILABLE: exclude unavailable concrete assets
+  MODALITY_FORBIDDEN: exclude user-forbidden modalities
+  ASSET_EXCEEDS_TOTAL_BUDGET: exclude assets that alone exceed the budget
+constraints:
+  maximum_modalities: 5
+  cross_modal_relationship_minimum_modalities: 2
+cross_modal_fallback:
+  trigger: greedy selection fails the cross-modal minimum
+  order: increasing set size, then closed-taxonomy order
+  requirements: preserve availability, prohibitions, required modalities, budget, and count limits
+  objective: feasibility only, not maximum richness
+evaluation_deduplication:
+  identity: modality set, case-folded and trimmed description, integration level
+  semantic_merging: manual annotation only
+cross_modal_levels:
+  JUXTAPOSITION: 0
+  CORRESPONDENCE: 1
+  SYNTHESIS: 2

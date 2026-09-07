@@ -1,0 +1,19 @@
+{
+  "version": "visual-review-1.0",
+  "source_run_sha256": "65b068837faa1658372884eec2cff041ca264901049d18fa1e1a57c532808e2d",
+  "reviewed_utc": "2026-09-06T08:11:55Z",
+  "reviews": [
+    {"case_id": 5031, "status": "provisional_pass", "observation": "局部影像的坑缘与内部结构可辨，红色目录点位于坑内近中心；DEM 中对应位置呈现低地及较高边缘，东西剖面穿越该结构。", "concern": "仅支持粗尺度形态与对应关系调查，未测量配准误差，不能由亮斑推断成分。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 734, "status": "hold", "observation": "影像中目标边界对比度较低；DEM 的主要低地区域在目录点南侧，目录点接近低地北缘。", "concern": "暂缓：需要复核目录中心与可见坑缘，不能确定偏移来自目录、地形不对称性还是配准。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 2179, "status": "provisional_pass", "observation": "局部影像中近圆形边界包围目录点；DEM 呈中心低地，东侧区域高于西侧，剖面也显示背景不对称。", "concern": "区域坡度与坑缘高度尚未分离，不把剖面高差视为坑深或成因证据。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 4512, "status": "hold", "observation": "影像中目标坑缘较弱且不完整；DEM 的中心低地横向范围与影像中候选边界不易一一对应，东西剖面高度不对称。", "concern": "暂缓：先复核边界和空间对应，不能将不一致直接判为真实改造或数据错误。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 858, "status": "provisional_pass", "observation": "目录点位于可辨认目标内部；影像可见内部结构及南北邻近坑，DEM 中可见对应的粗尺度低地与中心起伏。", "concern": "照明不均与邻近结构可能影响形态判断，细小结构不能由平滑 DEM 确认。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 6611, "status": "hold", "observation": "目录点位于 DEM 大尺度低地内，但光学影像坑缘对比度低，亮暗纹理较强，难以稳定追踪完整边界。", "concern": "暂缓首批基准：需要不同照明或更合适影像的专家复核；低对比度不等于源数据无效。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 1695, "status": "hold", "observation": "局部影像存在明显斜向拼接边界，跨过目标区域，边界两侧纹理和照明显著不同；DEM 仍显示中心低地。", "concern": "暂缓：拼接与照明差异会混淆坑缘连续性和后期改造判断，需要替代影像或明确拼接掩膜。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 4870, "status": "provisional_pass", "observation": "影像中宽阔环形边界与中心区域可辨；DEM 中对应区域相对周边边缘较低，剖面显示明显东西差异。", "concern": "纹理和内部小坑复杂，批准仅限粗尺度探索；东西差异不自动证明某种改造。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 16604, "status": "provisional_pass", "observation": "影像中坑缘和明亮内部结构清楚，目录点落在内部结构附近；DEM 呈相应低地及中心局部较高区域。", "concern": "明亮结构不等于成分信息；平滑 DEM 不能分辨影像中所有细节，配准误差未量化。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 19610, "status": "provisional_pass", "observation": "局部影像的外部边界和内部弧状结构可辨，DEM 中目录点落在低地区域，可比较大尺度内外结构。", "concern": "不能将明亮弧状结构直接等同于高程峰值；需要专门的空间匹配检验。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 908, "status": "hold", "observation": "影像中存在多个重叠或邻近圆形结构，目录点附近的目标完整边界不够明确；DEM 中低地与周边多个结构相邻。", "concern": "暂缓：先明确目标边界和目录记录对应，避免把邻近结构混入定量比较。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
+    {"case_id": 1851, "status": "provisional_pass", "observation": "大尺度近圆形目标及内部纹理可辨，目录点位于内部；DEM 中相应区域为宽阔低地，东侧周边高地明显。", "concern": "小亮斑和弱坑缘细节不能据此解释成分或年龄；先进行粗尺度形态与背景对照。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]}
+  ]
+}

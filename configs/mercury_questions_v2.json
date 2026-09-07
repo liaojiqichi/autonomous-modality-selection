@@ -1,0 +1,109 @@
+{
+  "version": "mercury-questions-2.0",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "question_type": "ANALYTICAL_APPROACH_DISCOVERY",
+      "text": "针对 {crater}，如何调查坑缘连续性、坑底形态与内部结构？提出彼此不同且可操作的分析方法，说明各方法需要什么证据，以及现有数据能支持到什么程度。",
+      "answer_requirements": [
+        "每种方法说明目标、步骤、证据文件与限制，避免同义改写凑数。",
+        "区分可见形态、待测量的特征与成因解释。",
+        "目录形态代码仅作为历史记录，不作为正确答案。"
+      ]
+    },
+    {
+      "question_id": "Q2",
+      "question_type": "GENERAL_CRATER_INVESTIGATION",
+      "text": "如何检验 {crater} 的东西向地形是否存在不对称性，并区分坑内起伏与区域背景坡度的影响？提出分析流程和必要的验证，不把现有中心剖面的最大最小高差直接当作坑深。",
+      "answer_requirements": [
+        "使用地形证据时注明高程基准、单位和剖面位置。",
+        "说明中心偏移、采样方向和区域坡度如何影响结论。",
+        "未选择地形数据时必须承认无法检验高程不对称性，并列出所缺证据。"
+      ]
+    },
+    {
+      "question_id": "Q3",
+      "question_type": "CROSS_MODAL_RELATIONSHIP_DISCOVERY",
+      "text": "对于 {crater}，如何检验影像中的坑缘或内部结构与高程变化是否空间对应？提出联合分析方法，同时说明出现不一致时，如何区分配准问题、分辨率差异与可能的地貌差异。",
+      "answer_requirements": [
+        "跨模态观点必须明确指出两类证据如何关联，不仅并列罗列。",
+        "承认相同目标中心投影不等于源产品已经精确配准。",
+        "缺少影像或地形时不得声称已经证实二者对应；说明无法完成的部分。"
+      ]
+    },
+    {
+      "question_id": "Q4",
+      "question_type": "EXPLANATORY_PERSPECTIVE_EXPLORATION",
+      "text": "结合 {crater} 的局部形态和周边背景，可以提出哪些可检验的后期改造假说？说明每个假说需要观察哪些支持或反驳证据、还有哪些替代解释，以及当前数据无法区分什么。",
+      "answer_requirements": [
+        "区分观察事实与工作假说，不预设发生过某一种改造。",
+        "没有支持时允许回答证据不足，不强迫生成多个成因。",
+        "不得仅凭灰度影像判断成分、绝对年龄、确定的火山活动或撞击参数。"
+      ]
+    },
+    {
+      "question_id": "Q5",
+      "question_type": "EXPLANATORY_PERSPECTIVE_EXPLORATION",
+      "text": "对于 {crater} 这一撞击构造，哪些撞击体尺寸、速度、入射角和靶体热状态的参数组合可能产生与观测相近的最终直径？设计筛选等效参数族的方法，再说明加入坑形或内部结构观测后如何排除其中部分组合；若缺少适用的模拟网格，不得给出具体参数范围。",
+      "answer_requirements": [
+        "明确最终直径与瞬态坑径的区别，以及入射角定义、单位和模型适用尺度。",
+        "先定义直径测量误差与匹配容差，再比较参数组合；输出保留、排除和无法判断的理由。",
+        "不得把 Caloris 大型盆地的参数或缩放关系直接套用到本例；必须核对尺寸和靶体条件适用性。",
+        "缺少可追溯模拟输出时仅提出检验方案和所缺证据，不伪造参数网格、置信区间或排除结果。"
+      ],
+      "quantitative_modalities": [
+        "CRATER_CATALOG",
+        "TOPOGRAPHY",
+        "SIMULATION_OUTPUT"
+      ],
+      "quantitative_prerequisites": [
+        "经审核的最终直径测量及误差",
+        "覆盖目标尺度、撞击参数和靶体条件的真实模拟网格与版本",
+        "模拟和观测使用同一坑形定义、尺度及误差模型"
+      ]
+    },
+    {
+      "question_id": "Q6",
+      "question_type": "CROSS_MODAL_RELATIONSHIP_DISCOVERY",
+      "text": "对于 {crater}，如果多个撞击模型都符合直径观测，坑底起伏、坑缘几何与内部结构中，哪一种额外观测最有希望区分这些模型？设计逐项加入观测的比较，并说明模型预测重叠或观测误差过大时为何不能排除某个模型。",
+      "answer_requirements": [
+        "比较直径单独约束与逐项加入观测后的可接受模型集合。",
+        "区分观测的实际区分能力与选择器的人工能力分数，不把分数当作信息增益。",
+        "说明各观测的空间配准、分辨率和共有来源；不可将相关误差当作独立证据重复计数。",
+        "没有模型预测和测量误差时，不声称已计算信息增益或排除了任何模型。"
+      ],
+      "quantitative_modalities": [
+        "OPTICAL_IMAGE",
+        "TOPOGRAPHY",
+        "SIMULATION_OUTPUT"
+      ],
+      "quantitative_prerequisites": [
+        "通过直径约束的候选模拟集合及其额外观测预测",
+        "目标坑缘、坑底和内部结构的可重复测量与误差",
+        "预先固定的模型接受准则及相关误差处理"
+      ]
+    },
+    {
+      "question_id": "Q7",
+      "question_type": "EXPLANATORY_PERSPECTIVE_EXPLORATION",
+      "text": "对于 {crater}，如果可靠测量表明其内部相对同等尺度的参考撞击坑更浅，如何区分后期物质填充、地形松弛与区域背景坡度或测量偏差的影响？提出可被支持或反驳的预测，说明哪些现有观测和新增证据能区分解释；不得预设本例确实更浅或经历过某种过程。",
+      "answer_requirements": [
+        "先检验前提是否成立，不把中心剖面最大最小高差当作坑深。",
+        "参考坑必须说明直径、地质背景和数据质量的可比性。",
+        "列出各解释的预期形态或地形表现、反例及不能区分的情况。",
+        "无适用前向模型或其他独立约束时，不反演填充厚度、松弛时间或绝对年龄。"
+      ],
+      "quantitative_modalities": [
+        "OPTICAL_IMAGE",
+        "TOPOGRAPHY",
+        "SCIENTIFIC_LITERATURE",
+        "SIMULATION_OUTPUT"
+      ],
+      "quantitative_prerequisites": [
+        "审核后的坑缘和坑底测量及区域背景校正",
+        "可比参考坑数据及其选择规则",
+        "填充或松弛的适用前向模型、参数范围与文献依据"
+      ]
+    }
+  ]
+}

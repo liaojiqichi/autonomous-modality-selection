@@ -1,0 +1,8 @@
+schema_version: "2.0"
+modalities:
+  - OPTICAL_IMAGE
+  - CRATER_CATALOG
+  - TOPOGRAPHY
+  - SCIENTIFIC_LITERATURE
+  - SIMULATION_OUTPUT
+

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh">
+<meta charset="utf-8">
+<title>水星真实数据初步试验</title>
+<style>
+body{font:16px/1.7 system-ui,sans-serif;max-width:1180px;margin:40px auto;
+padding:0 24px;color:#203044;background:#f6f8fb}
+section{background:white;padding:24px;margin:24px 0;border-radius:12px}
+img{width:100%;height:auto}td,th{padding:8px;border:1px solid #ccd5df;text-align:left}
+table{border-collapse:collapse;width:100%}a{color:#1756a9}
+</style>
+<h1>水星真实数据初步试验</h1><p>$run_id · $pilot_version</p>
+<p>已读取 $catalogue_rows 条真实目录记录；按预定条件得到 $eligible_rows 个候选，抽取 $case_count 个目标。
+$accepted 个通过像元覆盖门槛，共尝试 $trial_count 次确定性选择，其中 $failed_trials 次无可行结果（原因见 run.json）。</p>
+<p>本页显示真实产品的派生结果。未调用 LLM、未生成科研答案、未取得专家丰富度评分。
+选择规则和能力说明仍为人工制定，选择次数不表示科学性能。</p>
+<p>使用作者公开的 2011 年飞掠时期目录；2018 年附件访问受出版商验证页面阻碍。
+目录与轨道影像的位置匹配需人工复核。DEM 使用源文件记录的缩放系数和偏移量换算米；
+两类栅格投影到同一目标中心，但该处理不等于消除了源产品配准误差。</p>
+<p>抽样为具名、50–150 km、|纬度|&lt;45°、15°&lt;|东经|&lt;150°，按直径排序均匀取秩；
+不是全球代表性随机样本。成本采用实验单位：目录 1、影像 2、地形 2。
+来源说明、文件校验、运行环境和每次输入输出保存在 <a href="run.json">run.json</a>。</p>
+<h2>选择结果</h2>
+<table><tr><th>条件</th><th>所选模态（有序）</th><th>次数</th></tr>$table</table>
+$cards
+</html>

@@ -1,0 +1,29 @@
+{
+  "version": "mercury-questions-1.0",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "question_type": "ANALYTICAL_APPROACH_DISCOVERY",
+      "text": "针对 {crater}，如何调查坑缘连续性、坑底形态与内部结构？提出彼此不同且可操作的分析方法，说明各方法需要什么证据，以及现有数据能支持到什么程度。",
+      "answer_requirements": ["每种方法说明目标、步骤、证据文件与限制，避免同义改写凑数。", "区分可见形态、待测量的特征与成因解释。", "目录形态代码仅作为历史记录，不作为正确答案。"]
+    },
+    {
+      "question_id": "Q2",
+      "question_type": "GENERAL_CRATER_INVESTIGATION",
+      "text": "如何检验 {crater} 的东西向地形是否存在不对称性，并区分坑内起伏与区域背景坡度的影响？提出分析流程和必要的验证，不把现有中心剖面的最大最小高差直接当作坑深。",
+      "answer_requirements": ["使用地形证据时注明高程基准、单位和剖面位置。", "说明中心偏移、采样方向和区域坡度如何影响结论。", "未选择地形数据时必须承认无法检验高程不对称性，并列出所缺证据。"]
+    },
+    {
+      "question_id": "Q3",
+      "question_type": "CROSS_MODAL_RELATIONSHIP_DISCOVERY",
+      "text": "对于 {crater}，如何检验影像中的坑缘或内部结构与高程变化是否空间对应？提出联合分析方法，同时说明出现不一致时，如何区分配准问题、分辨率差异与可能的地貌差异。",
+      "answer_requirements": ["跨模态观点必须明确指出两类证据如何关联，不仅并列罗列。", "承认相同目标中心投影不等于源产品已经精确配准。", "缺少影像或地形时不得声称已经证实二者对应；说明无法完成的部分。"]
+    },
+    {
+      "question_id": "Q4",
+      "question_type": "EXPLANATORY_PERSPECTIVE_EXPLORATION",
+      "text": "结合 {crater} 的局部形态和周边背景，可以提出哪些可检验的后期改造假说？说明每个假说需要观察哪些支持或反驳证据、还有哪些替代解释，以及当前数据无法区分什么。",
+      "answer_requirements": ["区分观察事实与工作假说，不预设发生过某一种改造。", "没有支持时允许回答证据不足，不强迫生成多个成因。", "不得仅凭灰度影像判断成分、绝对年龄、确定的火山活动或撞击参数。"]
+    }
+  ]
+}
