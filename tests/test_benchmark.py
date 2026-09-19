@@ -280,6 +280,29 @@ def test_frozen_configs_are_strict_and_cover_twelve_distinct_cases() -> None:
         QuestionSet.model_validate(questions)
 
 
+def test_source_case_projection_ignores_obsolete_scores(
+    prepared_case: tuple[PilotCase, Path, list[DownloadRecord], VisualReview],
+    tmp_path: Path,
+) -> None:
+    from autonomous_modality.benchmark import load_source_cases
+
+    case, _, _, _ = prepared_case
+    path = tmp_path / "historical-run.json"
+    payload = {
+        "schema_version": "pilot-run-1.0",
+        "cases": [case.model_dump(mode="json")],
+        "trials": [{"obsolete_three_dimension_score": "not a new annotation"}],
+    }
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    before = path.read_bytes()
+    assert load_source_cases(path) == [case]
+    assert path.read_bytes() == before
+    payload["cases"][0]["catalogue"]["diameter"] = -1
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    with pytest.raises(ValidationError):
+        load_source_cases(path)
+
+
 def test_four_condition_cli_and_evidence_isolation(
     prepared_case: tuple[PilotCase, Path, list[DownloadRecord], VisualReview],
     tmp_path: Path,
@@ -296,7 +319,17 @@ def test_four_condition_cli_and_evidence_isolation(
     )
     main()
     run = json.loads((output / "preparation.json").read_text(encoding="utf-8"))
-    assert len(run["records"]) == 16
+    assert len(run["records"]) == 64
+    assert run["split"] == "development"
+    random_rows = [r for r in run["records"] if r["selection"]["condition"] == "RANDOM"]
+    assert len(random_rows) == 40
+    shared = {}
+    for row in random_rows:
+        key = (row["request"]["question"]["question_id"], row["draw_index"])
+        value = (row["selection"]["seed"], row["selection"]["selected_asset_ids"])
+        if key in shared:
+            assert shared[key] == value
+        shared[key] = value
     assert run["answers_generated"] == 0
     from autonomous_modality.experiments import PreparationRun
 
@@ -334,3 +367,18 @@ def test_four_condition_cli_and_evidence_isolation(
     with pytest.raises(ValueError, match="outside the active protocol"):
         main()
     assert not (tmp_path / "rejected").exists()
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "experiments",
+            "--benchmark",
+            str(destination.parent),
+            "--split",
+            "held_out",
+            "--output",
+            str(tmp_path / "heldout"),
+        ],
+    )
+    with pytest.raises(ValueError, match="reviewed"):
+        main()
+    assert not (tmp_path / "heldout").exists()

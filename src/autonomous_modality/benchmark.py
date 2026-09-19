@@ -30,7 +30,7 @@ from autonomous_modality.models import (
     NonEmptyString,
     StrictModel,
 )
-from autonomous_modality.pilot import RADIUS_M, CatalogueRow, PilotCase, PilotRun
+from autonomous_modality.pilot import RADIUS_M, CatalogueRow, PilotCase
 from autonomous_modality.selection import select_baseline
 
 VERSION = "mercury-benchmark-1.1"
@@ -518,6 +518,21 @@ class BenchmarkRun(StrictModel):
     llm_called: Literal[False] = False
 
 
+class SourceEvidenceRun(StrictModel):
+    """Read only source cases, not obsolete selection scores, from a historical run."""
+
+    schema_version: Literal["pilot-run-1.0", "pilot-run-1.1"]
+    cases: list[PilotCase]
+
+
+def load_source_cases(path: Path) -> list[PilotCase]:
+    """Validate the evidence projection; original file hash is still pinned by reviews."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return SourceEvidenceRun.model_validate(
+        {key: payload[key] for key in ("schema_version", "cases")}
+    ).cases
+
+
 def main() -> None:
     """Verify local sources, audit all cases and create a new portable benchmark folder."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -530,25 +545,25 @@ def main() -> None:
     root = args.output.resolve()
     if root.exists() or "raw" in [part.lower() for part in root.parts]:
         raise ValueError("output must be a new directory outside raw")
-    run = PilotRun.model_validate_json(args.run.read_text(encoding="utf-8"))
+    cases = load_source_cases(args.run)
     reviews = ReviewSet.model_validate_json(args.reviews.read_text(encoding="utf-8"))
     questions = QuestionSet.model_validate_json(args.questions.read_text(encoding="utf-8"))
     if sha256_file(args.run) != reviews.source_run_sha256:
         raise ValueError("review is not pinned to this run")
     by_id = {review.case_id: review for review in reviews.reviews}
-    ids = [case.catalogue.id for case in run.cases]
+    ids = [case.catalogue.id for case in cases]
     if len(set(ids)) != len(ids) or set(by_id) != set(ids):
         raise ValueError("visual reviews must cover every case exactly once")
     sources = load_sources(args.sources)
     audits = [
-        audit_case(case, args.run.parent, by_id[case.catalogue.id], sources) for case in run.cases
+        audit_case(case, args.run.parent, by_id[case.catalogue.id], sources) for case in cases
     ]
     root.mkdir(parents=True)
     save_model(root / "questions.json", questions)
     save_model(root / "visual_reviews.json", reviews)
     packages = []
     tasks = 0
-    for case, audit in zip(run.cases, audits, strict=True):
+    for case, audit in zip(cases, audits, strict=True):
         print(f"{case.catalogue.name}: {audit.status}; {audit.technical_errors}", flush=True)
         if audit.status != "provisional_pass":
             continue

@@ -1,0 +1,24 @@
+{
+  "version": "richness-ap-dual-model-2.0",
+  "proposal_sha256": "62168e04286f7f2937524dba458e1e38fd24ce486f43b73934f8d7e575989360",
+  "models": [
+    "Qwen/Qwen3-VL-8B-Instruct",
+    "google/gemma-4-E4B-it"
+  ],
+  "primary_budget": 4,
+  "sensitivity_budget": 3,
+  "maximum_modalities": 2,
+  "random_draws": 5,
+  "development_target_count": 6,
+  "held_out_target_count": 30,
+  "question_count": 4,
+  "human_review_count": 64,
+  "diagnostic_review_maximum": 16,
+  "dimensions": [
+    "A",
+    "P"
+  ],
+  "sampling": "uniform_feasible_subsets_with_replacement",
+  "answer_decoding": "greedy",
+  "schedule_policy": "reference_only"
+}

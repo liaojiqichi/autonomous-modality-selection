@@ -68,14 +68,13 @@ def test_question_type_changes_first_selection(
     assert result.decision.selected[0].modality is expected_first
 
 
-def test_selection_predicts_all_three_richness_dimensions(
+def test_selection_predicts_two_richness_dimensions(
     selection_request: InputSelectionRequest,
 ) -> None:
     result = select_baseline(selection_request)
 
     assert result.decision.expected_richness.analytical_approaches
     assert result.decision.expected_richness.explanatory_perspectives
-    assert result.decision.expected_richness.cross_modal_insights
 
 
 def test_required_modality_is_selected_first_and_marked_required(
@@ -178,10 +177,6 @@ def test_cross_modal_fallback_recovers_budget_feasible_pair(
     assert RULE_VERSION == "input-richness-baseline-1.2"
     assert "CROSS_MODAL_FEASIBILITY_FALLBACK" in result.decision.reason_codes
     assert "does not optimize solution richness" in result.decision.rationale
-    assert result.decision.expected_richness.cross_modal_insights[0].modalities == {
-        InputDataModality.OPTICAL_IMAGE,
-        InputDataModality.CRATER_CATALOG,
-    }
     assert budget_trap_request.model_dump_json() == original
 
 

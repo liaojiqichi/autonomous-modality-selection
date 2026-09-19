@@ -1,6 +1,7 @@
 # Code review and next milestones — 2026-09-06
 
-> Historical review. Its roadmap is superseded by proposal-1.2 and primary_experiments.md.
+> HISTORICAL ONLY. This dated review and roadmap are not the active design.
+> Follow primary_experiments.md (richness-ap-dual-model-2.0) instead.
 
 ## Scope and confirmed fixes
 

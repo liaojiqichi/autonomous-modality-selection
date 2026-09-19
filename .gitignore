@@ -27,3 +27,7 @@ data/exports/
 *.pem
 *.key
 auth.json
+
+# Local generated documents, renders, tools and test artifacts.
+/output/
+/tmp/

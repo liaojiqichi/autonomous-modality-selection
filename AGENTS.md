@@ -7,7 +7,7 @@ scientific input-data-modality selection for Mercury crater questions.
 
 - The system selects scientific input data modalities from a closed, versioned taxonomy.
 - The target outcome is solution richness: analytical approaches, explanatory
-  perspectives, and cross-modal insights.
+  perspectives (A/P only; no cross-modal insight score).
 - Scientific modality and model representation must remain distinct concepts.
 - The system models crater questions, available data assets, and resource constraints.
 - The primary experiment conditions are no data, all available modalities,
@@ -15,8 +15,13 @@ scientific input-data-modality selection for Mercury crater questions.
 - Richness is measured separately from scientific validity and evidence fidelity.
   Proposed executable analyses may contribute without having been performed.
 - Caloris quantitative inversion is out of scope. Preserve historical data and runs.
-- This phase prepares experiments offline without calling an LLM. Existing real
-  evidence packages may be reused; unit tests require no real planetary data.
+- Local preparation is offline; real model inference runs explicitly in Colab.
+  Never label mocks, pending selections or preparations as model results.
+- Reuse existing real evidence packages read-only; unit tests require no real data.
+- Follow the final 18 September proposal: Qwen3-VL and Gemma 4, four conditions,
+  five shared random draws with replacement, primary budget 4, sensitivity budget 3,
+  at most two selected modalities. Historical inspected targets are not held-out.
+- Schedule is reference only; flag delays only when they seriously threaten completion.
 - Metadata-only fixtures may be used in tests, but must never be represented as
   downloaded or observed scientific data.
 

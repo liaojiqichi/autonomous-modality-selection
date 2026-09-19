@@ -10,7 +10,6 @@ from autonomous_modality.models import (
     CandidateFilterResult,
     CraterQuestionType,
     DataAssetProfile,
-    ExpectedCrossModalInsight,
     ExpectedRichnessProfile,
     InputDataModality,
     InputSelectionDecision,
@@ -255,12 +254,6 @@ def select_baseline(request: InputSelectionRequest) -> BaselineSelectionResult:
     """Select a budget-feasible set predicted to increase solution richness."""
     candidates = filter_candidates(request)
     assets, scores, used_fallback = _select_assets(request, candidates)
-    selected_modalities = {asset.modality for asset in assets}
-    insights = [
-        ExpectedCrossModalInsight(modalities=set(pair), description=description)
-        for pair, description in PAIR_INSIGHTS.items()
-        if pair.issubset(selected_modalities)
-    ]
     approaches = _distinct_capabilities(
         [item for asset in assets for item in asset.analytical_capabilities]
     )
@@ -289,7 +282,7 @@ def select_baseline(request: InputSelectionRequest) -> BaselineSelectionResult:
     ]
     rationale = (
         "Selected complementary scientific inputs to expand analytical approaches, "
-        "explanatory perspectives, and cross-modal relationships within the constraints."
+        "and explanatory perspectives within the constraints."
     )
     reason_codes = ["RICHNESS_ORIENTED_DETERMINISTIC_BASELINE"]
     if used_fallback:
@@ -304,7 +297,6 @@ def select_baseline(request: InputSelectionRequest) -> BaselineSelectionResult:
         expected_richness=ExpectedRichnessProfile(
             analytical_approaches=approaches,
             explanatory_perspectives=perspectives,
-            cross_modal_insights=insights,
         ),
         total_cost=sum(asset.estimated_cost for asset in assets),
         rationale=rationale,

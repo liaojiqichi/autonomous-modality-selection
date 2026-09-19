@@ -33,9 +33,10 @@ packages = ["src/autonomous_modality"]
 
 [tool.pytest.ini_options]
 addopts = "--strict-config --strict-markers -ra"
-testpaths = ["tests"]
+testpaths = ["tests", "extensions/evidence_views_v1/tests"]
 
 [tool.ruff]
+extend-exclude = ["tmp", "output"]
 target-version = "py312"
 line-length = 100
 src = ["src", "tests"]

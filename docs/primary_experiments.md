@@ -1,60 +1,53 @@
-# Primary experiment protocol
+# Active experiment protocol: richness-ap-dual-model-2.0
 
-Version: richness-four-conditions-1.0, 2026-09-07.
+The sole active configuration is configs/experiment_protocol.json, bound to the final
+PDF checksum. Earlier preparations remain historical and must not be pooled.
 
-The thesis follows proposal-1.2: AI input selection and three separate richness
-outcomes. Caloris quantitative inversion is removed from active work. Its former
-source module, tests, active configuration and dedicated documentation were removed.
-Original acquired products and experiments/research/ records remain historical,
-outside the primary evaluation; their protocol snapshots allow recovery of context.
+## Design
 
-Use four primary conditions: NO_DATA, ALL_AVAILABLE, RANDOM, AGENT. Random sampling
-is uniform over nonempty feasible subsets in stable asset-ID order, with a recorded
-seed. Random and agent share constraints. ALL_AVAILABLE ignores budget/count caps
-and reports its cost separately, but respects prohibitions and confirmed availability.
-CASE_SPECIFIC is excluded until verified. NO_DATA intentionally uses empty evidence.
-Question types do not force evidence pairs in these primary conditions.
+- Models: Qwen/Qwen3-VL-8B-Instruct, google/gemma-4-E4B-it (provisional).
+- Four conditions: NO_DATA, ALL_AVAILABLE, RANDOM, AGENT.
+- Costs: catalog 1, optical 2, topography 2; maximum two selected modalities.
+- Primary budget 4; sensitivity budget 3. All-available costs 5 and ignores selection caps.
+- Five uniform random draws WITH replacement per scenario; both models share choices.
+- An implementation master seed plus scenario, budget and draw index derives a stable
+  integer seed. Duplicate subsets remain legitimate draws. This is an implementation
+  detail, not an additional thesis requirement.
+- Greedy answers; freeze model revisions, quantization, thinking, image processing and
+  output caps before formal tests. Fixed seeds alone do not guarantee hardware determinism.
+- 30 targets x 4 questions x 8 records x 2 models = 1,920 primary answer-attempt records.
+  Selector and evaluator calls are additional. Five draws are not five independent targets.
 
-AGENT is pending, never replaced by a rule decision. This release performs no model
-calls or answer generation. Infeasible selections are persisted separately from
-intentional no-data controls. Units are engineering cost units, not inference costs.
+## Local execution
 
-```powershell
-.venv\Scripts\python.exe -m autonomous_modality.experiments `
-  --benchmark experiments/benchmarks/mercury-screened-v2-20260907 `
-  --questions configs/mercury_questions_v1.json `
-  --output experiments/primary/mercury-four-conditions-repeat `
-  --budget 3 --seed 42
-```
+Run the command in the root README. Packages are checksum-verified and referenced,
+never copied. Use a fresh output directory. AGENT remains pending, not rule-substituted.
+Preparation stores model IDs, draw IDs, shared seeds, evidence hashes, proposal and
+protocol hashes, and a generator whitelist that excludes unselected metadata/rationales.
 
-Output must be new. Existing package evidence is hash-verified, not copied or
-rewritten. Output references use absolute paths; relocation requires re-preparation.
-The record contains provenance and a separate answer_input whitelist. A future
-generator must consume only that whitelist, never the entire preparation record.
-This is input routing, not yet an implemented model/tool filesystem sandbox.
+The current pool contains seven previously inspected targets. It is development material;
+selecting the final six requires a reviewed split. Held-out execution is blocked until
+an independent 30-target split and input compatibility have been reviewed.
+Pass `--split held_out --split-file <reviewed.json>` to use the validated TargetSplit
+schema. It requires 6 development IDs, 30 disjoint held-out IDs, reviewer identity,
+all previously inspected IDs and approval. The known 12-target historical pilot is
+checked independently. Later external/Colab inspection history must also be included.
+The split hash is saved. A missing target package is an error, not a skipped scenario.
+Do not silently manufacture or repeat craters to reach the sample target.
 
-Q1–Q4 from the original version are the active pilot questions. They deliberately
-target scientific investigation methods; some mention specific modalities, so
-generalization to less leading questions needs a later expert question pilot.
-They require neither parameter inversion nor completed numerical analyses.
-The historical Q5–Q7, quantitative readiness fields, budget trials and fixed-pair
-runner remain legacy/auxiliary compatibility paths and are not primary experiments.
-The new runner rejects question sets carrying quantitative inversion prerequisites.
+## Generation and evaluation gates
 
-Primary metrics remain the counts/diversity of approaches, perspectives and
-cross-modal insights. Proposed executable approaches can count without execution.
-Quality checks and evidence fidelity are separate outcomes, never silent filters
-on the primary richness counts. See richness_annotation.md.
+1. Reuse evidence_views_v1 packages; preserve all local/context/profile images and numeric text.
+2. Run a small Colab GPU compatibility pilot for EACH checkpoint; do not assume 15 GB is enough.
+3. Pin both model configurations and equivalent prompt content; verify selection JSON,
+   empty no-data input, ALL_AVAILABLE hard input limits, failures and truncation logging.
+4. Freeze target split and questions before new held-out answers.
+5. Annotate A/P using the source-span rubric; retain evaluator identities and raw outputs.
+6. Draw human review cases by model/condition/question family before inspecting richness;
+   use one RANDOM draw per sampled scenario. Diagnostic examples are a separate sample.
+7. Average RANDOM draws within scenario; compare agent, then aggregate equally across craters.
+   Do not treat questions/draws as independent crater replicates.
 
-Next: agree model phase/budget, implement an actual selector and generator, fix
-representation/output policies, run a small blinded annotation pilot, then freeze
-the formal target split and repeat schedule. Preparations are not answer results.
-
-## Verified preparation, 2026-09-07
-
-The final run is experiments/primary/mercury-four-conditions-20260907-final/preparation.json.
-Seven existing provisionally screened targets × four original questions × four
-conditions = 112 records. Each condition has 28 records: no-data, all-available
-and random are ready for later generation; agent is pending. No answers were
-generated. Seed 42, budget 3, maximum modalities 3. Final offline tests: 139 passed;
-Ruff lint and formatting passed. The 117 warnings originate in Rasterio/Affine.
+Local preparation does not run a model, perform annotation, or create scientific results.
+The active source checkout has no connected GPU session. These gates must be reported,
+not bypassed with fabricated answers. Schedule remains advisory.

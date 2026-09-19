@@ -1,33 +1,14 @@
-"""Deterministic solution-richness measurements for annotated outputs."""
+"""A/P richness counts; annotation, validity and evidence fidelity remain separate."""
 
-from autonomous_modality.models import (
-    CrossModalInsightLevel,
-    RichnessScores,
-    SolutionRichnessAnnotation,
-)
+from autonomous_modality.models import RichnessScores, SolutionRichnessAnnotation
 
-RULE_VERSION = "solution-richness-counts-1.1"
-
-
-def _distinct_count(items: list[str]) -> int:
-    return len({item.casefold().strip() for item in items})
+RULE_VERSION = "solution-richness-ap-2.0"
 
 
 def calculate_richness(annotation: SolutionRichnessAnnotation) -> RichnessScores:
-    """Count distinct items without changing annotations or merging paraphrases."""
-    distinct_insights = {
-        (frozenset(item.modalities), item.description.casefold().strip(), item.level)
-        for item in annotation.cross_modal_insights
-    }
-    correspondence = sum(
-        level is CrossModalInsightLevel.CORRESPONDENCE for _, _, level in distinct_insights
-    )
-    synthesis = sum(level is CrossModalInsightLevel.SYNTHESIS for _, _, level in distinct_insights)
+    """Count relevant duplicate groups; do not gate on execution or quality labels."""
+    groups = {(i.dimension, i.duplicate_group) for i in annotation.ideas if i.relevant}
     return RichnessScores(
-        rule_version=RULE_VERSION,
-        analytical_approach_count=_distinct_count(annotation.analytical_approaches),
-        explanatory_perspective_count=_distinct_count(annotation.explanatory_perspectives),
-        cross_modal_correspondence_count=correspondence,
-        cross_modal_synthesis_count=synthesis,
-        weighted_cross_modal_score=float(correspondence + 2 * synthesis),
+        analytical_approach_count=sum(dimension == "A" for dimension, _ in groups),
+        explanatory_perspective_count=sum(dimension == "P" for dimension, _ in groups),
     )

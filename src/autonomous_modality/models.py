@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Self
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 CURRENT_SCHEMA_VERSION = "2.0"
 NonEmptyString = Annotated[str, Field(min_length=1, pattern=r".*\S.*")]
 UnitScore = Annotated[float, Field(ge=0.0, le=1.0)]
-ExpertRating = Annotated[int, Field(ge=1, le=5)]
 NonNegativeFloat = Annotated[float, Field(ge=0.0)]
 
 
@@ -25,7 +24,7 @@ class InputDataModality(StrEnum):
 
 
 class CraterQuestionType(StrEnum):
-    """Question intents aligned with the three solution-richness dimensions."""
+    """Scientific question intents; these are not evaluation dimensions."""
 
     ANALYTICAL_APPROACH_DISCOVERY = "ANALYTICAL_APPROACH_DISCOVERY"
     EXPLANATORY_PERSPECTIVE_EXPLORATION = "EXPLANATORY_PERSPECTIVE_EXPLORATION"
@@ -46,14 +45,6 @@ class SelectionPriority(StrEnum):
 
     REQUIRED = "REQUIRED"
     COMPLEMENTARY = "COMPLEMENTARY"
-
-
-class CrossModalInsightLevel(StrEnum):
-    """Degree of integration expressed by a cross-modal statement."""
-
-    JUXTAPOSITION = "JUXTAPOSITION"
-    CORRESPONDENCE = "CORRESPONDENCE"
-    SYNTHESIS = "SYNTHESIS"
 
 
 class StrictModel(BaseModel):
@@ -220,19 +211,11 @@ class SelectedInputModality(StrictModel):
     reason_codes: list[NonEmptyString] = Field(min_length=1)
 
 
-class ExpectedCrossModalInsight(StrictModel):
-    """An anticipated relationship enabled by a pair of selected modalities."""
-
-    modalities: set[InputDataModality] = Field(min_length=2)
-    description: NonEmptyString
-
-
 class ExpectedRichnessProfile(StrictModel):
     """Predicted richness dimensions enabled by the selected evidence."""
 
     analytical_approaches: list[NonEmptyString] = Field(default_factory=list)
     explanatory_perspectives: list[NonEmptyString] = Field(default_factory=list)
-    cross_modal_insights: list[ExpectedCrossModalInsight] = Field(default_factory=list)
 
 
 class InputSelectionDecision(StrictModel):
@@ -264,40 +247,59 @@ class BaselineSelectionResult(StrictModel):
     decision: InputSelectionDecision
 
 
-class CrossModalInsight(StrictModel):
-    """One cross-modal statement extracted from a generated solution."""
+class IdeaUnit(StrictModel):
+    """One minimal idea with an auditable source span and independent quality checks."""
 
-    modalities: set[InputDataModality] = Field(min_length=2)
-    description: NonEmptyString
-    level: CrossModalInsightLevel
+    idea_id: NonEmptyString
+    dimension: Literal["A", "P"]
+    normalized_idea: NonEmptyString
+    duplicate_group: NonEmptyString
+    source_start: Annotated[int, Field(ge=0, strict=True)]
+    source_end: Annotated[int, Field(gt=0, strict=True)]
+    status: Literal["proposed", "observed", "executed"]
+    relevant: bool
+    scientific_validity: Literal["supported", "questionable", "unsupported", "not_assessed"]
+    evidence_fidelity: Literal["faithful", "overclaimed", "not_applicable", "not_assessed"]
+    quality_notes: str = ""
 
 
 class SolutionRichnessAnnotation(StrictModel):
-    """Expert or structured annotation of the three richness dimensions."""
+    """A/P-only annotation; old three-dimensional payloads must not be relabeled."""
 
-    schema_version: str = CURRENT_SCHEMA_VERSION
+    schema_version: Literal["richness-annotation-3.0"] = "richness-annotation-3.0"
     scenario_id: NonEmptyString
     solution_id: NonEmptyString
     annotator_id: NonEmptyString
-    analytical_approaches: list[NonEmptyString] = Field(default_factory=list)
-    explanatory_perspectives: list[NonEmptyString] = Field(default_factory=list)
-    cross_modal_insights: list[CrossModalInsight] = Field(default_factory=list)
-    analytical_approach_rating: ExpertRating | None = None
-    explanatory_perspective_rating: ExpertRating | None = None
-    cross_modal_insight_rating: ExpertRating | None = None
+    annotator_kind: Literal["llm", "human"]
+    rubric_version: Literal["richness-ap-1.0"] = "richness-ap-1.0"
+    source_text: Annotated[str, StringConstraints(strip_whitespace=False, min_length=1)]
+    ideas: list[IdeaUnit] = Field(default_factory=list)
     notes: str | None = None
+
+    @model_validator(mode="after")
+    def validate_units(self) -> Self:
+        """Check offsets, unique IDs and consistent duplicate-group membership."""
+        if len({i.idea_id for i in self.ideas}) != len(self.ideas):
+            raise ValueError("duplicate idea IDs")
+        groups: dict[str, tuple[str, bool]] = {}
+        for idea in self.ideas:
+            if not 0 <= idea.source_start < idea.source_end <= len(self.source_text):
+                raise ValueError("source span outside answer")
+            if not self.source_text[idea.source_start : idea.source_end].strip():
+                raise ValueError("source span is empty")
+            membership = (idea.dimension, idea.relevant)
+            if idea.duplicate_group in groups and groups[idea.duplicate_group] != membership:
+                raise ValueError("duplicate group has conflicting dimension or relevance")
+            groups[idea.duplicate_group] = membership
+        return self
 
 
 class RichnessScores(StrictModel):
-    """Deterministic counts derived from one richness annotation."""
+    """Two separate counts, without quality weighting or a composite score."""
 
-    # Legacy scores have no rule version; do not silently label them as recomputed.
-    rule_version: NonEmptyString | None = None
-    analytical_approach_count: Annotated[int, Field(ge=0)]
-    explanatory_perspective_count: Annotated[int, Field(ge=0)]
-    cross_modal_correspondence_count: Annotated[int, Field(ge=0)]
-    cross_modal_synthesis_count: Annotated[int, Field(ge=0)]
-    weighted_cross_modal_score: NonNegativeFloat
+    rule_version: Literal["solution-richness-ap-2.0"] = "solution-richness-ap-2.0"
+    analytical_approach_count: Annotated[int, Field(ge=0, strict=True)]
+    explanatory_perspective_count: Annotated[int, Field(ge=0, strict=True)]
 
 
 class EvaluationScenario(StrictModel):

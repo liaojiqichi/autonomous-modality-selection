@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 from enum import StrEnum
@@ -150,6 +151,8 @@ class ExperimentEvidence(StrictModel):
 class ExperimentRecord(StrictModel):
     """Decision inventory and generation whitelist remain separate."""
 
+    model_id: NonEmptyString
+    draw_index: int = Field(ge=0, le=4)
     request: InputSelectionRequest
     selection: ExperimentSelection
     answer_input: AnswerInput | None
@@ -185,7 +188,11 @@ class ExperimentRecord(StrictModel):
 class PreparationRun(StrictModel):
     """Versioned offline run; no generated answers or model results implied."""
 
-    protocol_version: Literal["richness-four-conditions-1.0"] = "richness-four-conditions-1.0"
+    protocol_version: Literal["richness-ap-dual-model-2.0"] = "richness-ap-dual-model-2.0"
+    split: Literal["development", "held_out"]
+    split_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    protocol_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    proposal_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     question_version: NonEmptyString
     questions_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     code_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
@@ -198,19 +205,34 @@ class PreparationRun(StrictModel):
     records: list[ExperimentRecord] = Field(min_length=1)
 
 
+def scenario_seed(master_seed: int, scenario_id: str, budget: float, draw: int) -> int:
+    """Stable per-scenario draws shared between model families, with replacement."""
+    payload = json.dumps([master_seed, scenario_id, float(budget), draw], separators=(",", ":"))
+    return int.from_bytes(hashlib.sha256(payload.encode()).digest()[:8], "big")
+
+
 def main() -> None:
     """Prepare four conditions from verified existing packages, without inference."""
     from autonomous_modality.acquisition import sha256_file
     from autonomous_modality.benchmark import QuestionSet, verify_package
+    from autonomous_modality.dataset import TargetSplit, historical_target_ids
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark", type=Path, required=True)
     parser.add_argument("--questions", type=Path, default=Path("configs/mercury_questions_v1.json"))
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--budget", type=float, default=3)
-    parser.add_argument("--maximum-modalities", type=int, default=3)
+    parser.add_argument("--protocol", type=Path, default=Path("configs/experiment_protocol.json"))
+    parser.add_argument("--split", choices=["development", "held_out"], default="development")
+    parser.add_argument("--split-file", type=Path)
+    parser.add_argument("--budget", type=float, choices=[3, 4], default=4)
+    parser.add_argument("--maximum-modalities", type=int, default=2)
     parser.add_argument("--seed", type=int, default=0)
     args = parser.parse_args()
+    from autonomous_modality.protocol import ExperimentProtocol
+
+    protocol = ExperimentProtocol.model_validate_json(args.protocol.read_text(encoding="utf-8"))
+    if args.maximum_modalities != protocol.maximum_modalities:
+        raise ValueError("maximum modalities must match protocol")
     constraints = InputSelectionConstraints(
         maximum_total_cost=args.budget, maximum_modalities=args.maximum_modalities
     )
@@ -223,6 +245,17 @@ def main() -> None:
     manifests = sorted(args.benchmark.glob("crater-*/package.json"))
     if not manifests:
         raise ValueError("no evidence packages found")
+    if args.split == "held_out" and args.split_file is None:
+        raise ValueError("held-out runs require a reviewed, frozen independent target split")
+    if args.split_file is not None:
+        split = TargetSplit.model_validate_json(args.split_file.read_text(encoding="utf-8"))
+        historical_root = Path("experiments/runs/mercury-real-pilot-20260905")
+        if set(split.held_out_ids) & historical_target_ids(historical_root):
+            raise ValueError("held-out split includes previously inspected targets")
+        target_ids = split.held_out_ids if args.split == "held_out" else split.development_ids
+        manifests = [args.benchmark / f"crater-{i}" / "package.json" for i in target_ids]
+        if any(not p.is_file() for p in manifests):
+            raise ValueError("reviewed target is missing its evidence package")
     records = []
     for manifest in manifests:
         package = verify_package(manifest.parent)
@@ -240,8 +273,17 @@ def main() -> None:
             request = InputSelectionRequest(
                 question=question, assets=package.assets, constraints=constraints
             )
-            for condition in ExperimentCondition:
-                result = prepare_condition(request, condition, args.seed)
+            schedule = [
+                (model_id, condition, draw)
+                for model_id in protocol.models
+                for condition in ExperimentCondition
+                for draw in range(
+                    protocol.random_draws if condition == ExperimentCondition.RANDOM else 1
+                )
+            ]
+            for model_id, condition, draw in schedule:
+                seed = scenario_seed(args.seed, question.question_id, args.budget, draw)
+                result = prepare_condition(request, condition, seed)
                 modalities = {
                     a.modality for a in package.assets if a.asset_id in result.selected_asset_ids
                 }
@@ -257,6 +299,8 @@ def main() -> None:
                 )
                 records.append(
                     ExperimentRecord(
+                        model_id=model_id,
+                        draw_index=draw,
                         request=request,
                         selection=result,
                         answer_input=answer,
@@ -276,6 +320,10 @@ def main() -> None:
                 )
     output.mkdir(parents=True)
     payload = PreparationRun(
+        split=args.split,
+        split_sha256=sha256_file(args.split_file) if args.split_file else None,
+        protocol_sha256=sha256_file(args.protocol),
+        proposal_sha256=protocol.proposal_sha256,
         question_version=questions.version,
         questions_sha256=sha256_file(args.questions),
         code_sha256=sha256_file(Path(__file__)),
