@@ -71,7 +71,7 @@ class VisualReview(StrictModel):
 class ReviewSet(StrictModel):
     """Pinned visual decisions for one immutable source run."""
 
-    version: Literal["visual-review-1.0"] = "visual-review-1.0"
+    version: Literal["visual-review-1.0", "visual-review-1.0-en.1"] = "visual-review-1.0"
     source_run_sha256: Sha256
     reviewed_utc: datetime
     reviews: list[VisualReview] = Field(min_length=1)
@@ -98,7 +98,12 @@ class QuestionSpec(StrictModel):
 class QuestionSet(StrictModel):
     """Three to five reusable questions fixed before answer-generation experiments."""
 
-    version: Literal["mercury-questions-1.0", "mercury-questions-2.0"] = "mercury-questions-1.0"
+    version: Literal[
+        "mercury-questions-1.0",
+        "mercury-questions-2.0",
+        "mercury-questions-1.0-en.1",
+        "mercury-questions-2.0-en.1",
+    ] = "mercury-questions-1.0"
     questions: list[QuestionSpec] = Field(min_length=3, max_length=12)
 
     @model_validator(mode="after")

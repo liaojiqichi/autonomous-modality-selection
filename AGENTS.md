@@ -43,6 +43,10 @@ scientific input-data-modality selection for Mercury crater questions.
 
 ### General rules
 
+- Use English for maintained code comments, messages, documentation, questions,
+  selector rationales and generated answers. Preserve original scientific data
+  and historical result payloads; version language changes and use fresh run IDs.
+
 - Target Python 3.12 or later.
 - Use the `src` package layout.
 - Add type annotations to all public functions and methods.

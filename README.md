@@ -11,6 +11,13 @@ It adapts the user's working AP notebook, retains its receipt-based inputs and
 generation interface, and runs 36 development attempts per crater/model. See the
 [notebook instructions](docs/colab_iterative_notebook.md) before running.
 
+Maintained code, documentation and experiment prompts use English. The Colab
+template requests English answers of approximately 200-300 words and starts with
+`RUN_LABEL = "emin-agentic-en-001"`. Use a fresh label when changing the protocol.
+English question versions end in `-en.1`; older versions remain readable.
+Historical result payloads and original scientific data retain their original bytes.
+Do not pool earlier Chinese answers with the new English-language experiment.
+
 Active design: [experiment protocol](docs/primary_experiments.md).
 Research summary: [proposal alignment](docs/research_proposal.md).
 Annotation: [A/P rubric](docs/richness_annotation.md).

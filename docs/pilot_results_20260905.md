@@ -1,23 +1,25 @@
-# 2026-09-05 真实数据初步试验记录
+# Real-data pilot record: 5 September 2026
 
-运行标识：`mercury-real-pilot-20260905`。这是数据准备与确定性模态选择试验，尚未调用大模型或取得专家答案评分。
+> English translation of the historical report at commit `3b91476`.
+> Dates, findings and validation counts describe that pilot, not a new execution.
 
-## 已取得和处理的数据
+Run ID: `mercury-real-pilot-20260905`. This pilot prepared data and performed deterministic modality selection. It produced no LLM answers or expert answer scores.
 
-- 来源文件共 4,778,972,401 字节（约 4.78 GB），全部记录 SHA-256 校验值。
-- Herrick 2011 作者公开 CSV：16,876 条记录，以及作者的字段说明文件。
-- USGS 全球高程 DEM v2：530,934,581 字节。
-- MDIS LOI 全球影像 v1：4,247,471,083 字节。
-- 来源文件在 `data/acquired/mercury-pilot-20260905/`，未写入或修改 `data/raw/`。
+## Acquired and processed data
 
-2018 年目录附件被出版商 HTTP 403 验证页面阻拦，因此本轮明确使用 2011 年目录。它的历史坐标和形态标注仍需人工复核。
+- Source files totalled 4,778,972,401 bytes (approximately 4.78 GB), all with recorded SHA-256 checksums.
+- Herrick's publicly available 2011 CSV contained 16,876 records, accompanied by the author's field descriptions.
+- USGS global elevation DEM v2: 530,934,581 bytes.
+- MDIS LOI global image mosaic v1: 4,247,471,083 bytes.
+- Source files are under `data/acquired/mercury-pilot-20260905/`. Nothing was written to or changed under `data/raw/`.
 
-## 抽样与准备结果
+The publisher's HTTP 403 verification page blocked the 2018 catalogue attachment. This pilot therefore used the 2011 catalogue explicitly. Its historical coordinates and morphology labels still require manual review.
 
-筛选具名、直径 50–150 km、绝对纬度小于 45°、绝对东经介于 15° 和 150° 的目标，共得到 82 个候选。
-按直径和目录 ID 排序后均匀取 12 个秩，不因影像质量或选择结果重新抽样。
+## Sampling and preparation
 
-| 目录名称 | 目录 ID | 历史目录直径（km） |
+The selection criteria were named targets, diameters of 50–150 km, absolute latitude below 45°, and absolute east longitude between 15° and 150°. This yielded 82 candidates. Twelve evenly spaced ranks were selected after sorting by diameter and catalogue ID. Targets were not resampled according to image quality or selection outcomes.
+
+| Catalogue name | Catalogue ID | Historical catalogue diameter (km) |
 | --- | --- | --- |
 | Nampeyo | 5031 | 51.5 |
 | Echegaray | 734 | 67.6 |
@@ -32,39 +34,32 @@
 | Holbein | 908 | 135.3 |
 | Giotto | 1851 | 148.6 |
 
-每个目标生成 2D 局部影像、5D 环境影像、2D 高程栅格、东西向中心高程剖面、可视化预览、目录 JSON 和资产说明。
-其中 D 表示目录直径。派生栅格共 36 个，合计 480,928,554 字节；最小有效像元比例约 99.654%，12 个目标全部通过预设的 95% 准备门槛。
-该门槛仅检查有效像元覆盖，不代表科学精度或源产品配准验证。
+Each target received a 2D local image, 5D context image, 2D elevation raster, central east-west elevation profile, previews, catalogue JSON and asset descriptions. Here D denotes catalogue diameter. The 36 derived rasters totalled 480,928,554 bytes. Minimum valid-pixel coverage was approximately 99.654%; all twelve targets passed the predefined 95% preparation threshold. This threshold checks valid coverage only; it does not certify scientific accuracy or source registration.
 
-处理使用水星半径 2,439,400 m 的目标中心方位等距投影。
-DEM 缺失像元先掩膜，再应用 TIFF 内的 0.5 缩放系数；输出高程单位为米。
-光学影像保留显示拉伸后的像素值，不声称是校准反射率。
-源数据及 36 个派生栅格的校验信息均已核对；运行中记录的代码和模板校验值与运行完成后的文件一致。
+Processing used a target-centred azimuthal equidistant projection with Mercury radius 2,439,400 m. Missing DEM pixels were masked before applying the TIFF scale factor of 0.5; output elevations are in metres. Optical values retain the source display stretch and are not claimed to be calibrated reflectance.
 
-## 192 次模态选择
+Checksums of source files and all 36 derived rasters were verified. Recorded code and template checksums matched the files at completion.
 
-每个目标使用四种问题类型和四个实验条件，共 12 × 4 × 4 = 192 次。
-预算单位人为定义为目录 1、影像 2、地形 2，不表示真实处理时间或模型 token 数。
+## 192 modality selections
 
-| 条件 | 结果 | 次数 |
+Each target used four question types and four experimental conditions: 12 × 4 × 4 = 192 attempts. Manually assigned ordinal costs were catalogue 1, imagery 2 and topography 2, without a measured time or token interpretation.
+
+| Condition | Result | Count |
 | --- | --- | --- |
-| 预算 5，三模态可用 | 选择影像、目录、地形，顺序随问题类型变化 | 48 |
-| 预算 3 | 地形＋目录 | 36 |
-| 预算 3 | 影像＋目录 | 12 |
-| 排除地形 | 影像＋目录 | 48 |
-| 排除影像 | 地形＋目录 | 48 |
+| Budget 5, all three modalities available | Imagery, catalogue and topography; order varies by question type | 48 |
+| Budget 3 | Topography + catalogue | 36 |
+| Budget 3 | Imagery + catalogue | 12 |
+| Topography excluded | Imagery + catalogue | 48 |
+| Imagery excluded | Topography + catalogue | 48 |
 
-所有选择均符合约束。本轮没有触发可行性兜底；兜底行为由离线边界测试覆盖。
-不同陨石坑在相同问题类型和实验条件下得到相同选择，原因是它们通过了相同可用性门槛，且当前基线使用相同的人工能力说明和固定评分。
-这一结果验证了流程一致性，不能证明模态组合对科学答案的优劣。
+Every selection satisfied its constraints. No feasibility fallback was triggered; offline boundary tests cover that behaviour. Identical question types and conditions produced identical choices across craters because they passed the same availability checks and used the same manually specified capabilities and fixed scores. This confirms pipeline consistency, without establishing which combinations produce better scientific answers.
 
-未生成实际答案，因此没有计算或虚构“实际答案丰富度”。文献本轮作为方法背景，未作为第四种选模资产；未取得模拟输出。
+No answers were generated and no answer-richness values were computed or invented. Literature provided methodological context rather than a fourth selectable asset. Simulation outputs were unavailable.
 
-## 查看与复核
+## Inspection and review
 
-- [完整图文报告](../experiments/runs/mercury-real-pilot-20260905/report.html)
-- [运行输入、输出和来源记录](../experiments/runs/mercury-real-pilot-20260905/run.json)
-- [复现方法及处理限制](real_data_pilot.md)
+- [Full illustrated report](../experiments/runs/mercury-real-pilot-20260905/report.html)
+- [Inputs, outputs and provenance](../experiments/runs/mercury-real-pilot-20260905/run.json)
+- [Reproduction and processing limits](real_data_pilot.md)
 
-下一步应人工复核目录中心与图像坑体的匹配，以及 DEM 剖面是否穿过预期地貌。
-通过后再设计固定模型、固定生成条件的答案实验，并使用独立专家标注评估丰富度。
+The next step at the time was manual review of catalogue-centre alignment with the visible crater and whether the DEM profile crossed the intended landform. Subsequent answer experiments would require a fixed model and generation settings, with independent expert richness assessment. See the current experiment protocol for the superseding evaluation design.

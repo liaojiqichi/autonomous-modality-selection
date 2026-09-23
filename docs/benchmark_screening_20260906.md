@@ -1,91 +1,79 @@
-# 12 例审核与首批标准输入包
+# Review of twelve cases and the first standardized input packages
 
-本轮完成了真实数据的技术复核、助手视觉初筛、四个固定科研问题和首批输入包。
-没有调用项目 LLM、生成科研答案或进行专家评分。已有源数据和历史试验均未修改。
+> English translation of the historical report at commit `3b91476`.
+> Review dates, decisions and test counts describe the original work.
 
-## 审核的含义
+This stage completed technical checks of real data, assistant visual screening, four fixed research questions and the first input packages. No project LLM calls, scientific answers or expert scores were produced. Existing source data and historical runs were unchanged.
 
-“初筛通过”只允许在明确限制下开展探索性试验，不等于专家认可、精确配准或科学结论正确。
-“暂缓”也不等于数据错误：它表示当前材料不足以让该例进入首批较清晰的开发集。
-不将弱坑缘、平滑高程或非对称剖面直接解释为某种地质过程。
+## Meaning of the review
 
-技术检查覆盖所有 12 例：
+A provisional pass permits exploratory work within documented limits. Expert approval, precise registration and scientific correctness remain unestablished. A hold indicates that current material is insufficient for inclusion in the initial clearer-boundary development set. Weak rims, smoothed elevation or asymmetric profiles are insufficient on their own to identify a geological process.
 
-- 四个已获取源文件的身份、大小及 SHA-256；派生栅格与原运行校验值一致。
-- 目录记录、逐例记录和源运行中的目标身份一致。
-- 三个栅格的目标中心投影、范围、方形像元、单位缩放状态与记录一致。
-- 重新计算有效像元比例，门槛为 95%；拒绝无变化的常量栅格。
-- 从数值 DEM 重新取出中心东西向剖面，检查剖面 CSV 的位置和值一致。
-- 预览图可读取，为全部实际证据、总览图及逐例记录固定校验值。
+Technical checks covered all twelve cases:
 
-助手逐例查看了局部/背景影像与剖面总览，以及独立高程图。判断是定性的；未描绘坑缘、
-测量中心偏移或进行源产品特征配准。所有案例仍需要行星科学专家复核。
+- Identity, size and SHA-256 of four acquired source files; derived-raster consistency with the original run.
+- Consistent target identity across catalogue, case record and source run.
+- Recorded target-centred projection, extent, square pixels, units and scaling for three rasters.
+- Recomputed valid-pixel coverage against a 95% threshold; rejection of constant rasters.
+- Recomputed central east-west DEM profile, compared with CSV coordinates and elevations.
+- Readable previews and pinned checksums for all evidence, overviews and case records.
 
-## 逐例结论
+The assistant inspected each local/context-image and profile overview, plus the separate elevation map. These were qualitative judgments without rim tracing, centre-offset measurements or source-feature registration. All cases still require planetary-science expert review.
 
-| 案例 | 首批状态 | 观察及处理依据 |
+## Case-level decisions
+
+| Case | Initial status | Observation and rationale |
 | --- | --- | --- |
-| Nampeyo | 初筛通过 | 坑缘、内部结构和对应低地较清晰；仅用于粗尺度探索 |
-| Echegaray | 暂缓 | 影像边界弱，DEM 主要低地位于目录点南侧；先核对中心 |
-| Thoreau | 初筛通过 | 边界与中心低地可辨，东西背景高程不同；适合调查不对称性 |
-| Bartok | 暂缓 | 边界不完整，影像候选边界与 DEM 低地范围不易对应 |
-| Soseki | 初筛通过 | 内部结构、邻近坑与大尺度地形可比较；照明仍是限制 |
-| Kenko | 暂缓 | 低对比度和较强亮暗纹理妨碍稳定追踪坑缘 |
-| Harunobu | 暂缓 | 显著拼接边界穿过目标区域，可能混淆形态判断 |
-| Mofolo | 初筛通过 | 大尺度环形边界与地形可比较；内部小坑和纹理需谨慎 |
-| Eminescu | 初筛通过 | 边界和内部结构清楚，可调查与中心地形的对应 |
-| Scarlatti | 初筛通过 | 内外结构可辨；亮弧不能直接等同于高程峰值 |
-| Holbein | 暂缓 | 多个邻近/重叠结构使目标完整边界不够明确 |
-| Giotto | 初筛通过 | 大尺度目标与低地可辨；细小亮斑不用于成分或年龄判断 |
+| Nampeyo | Provisional pass | Discernible rim, interior and corresponding depression; coarse-scale exploration only |
+| Echegaray | Hold | Weak image boundary; main DEM depression south of the catalogue point; review the centre |
+| Thoreau | Provisional pass | Discernible boundary and central depression; east-west background differences support an asymmetry investigation |
+| Bartok | Hold | Incomplete boundary; candidate image boundaries are difficult to match to DEM depression extent |
+| Soseki | Provisional pass | Interior, neighbouring craters and coarse topography can be compared; illumination remains a limitation |
+| Kenko | Hold | Low contrast and strong brightness texture hinder consistent rim tracing |
+| Harunobu | Hold | A prominent mosaic seam crosses the target and may confound morphology interpretation |
+| Mofolo | Provisional pass | Broad annular boundary and topography can be compared; interior small craters and texture require caution |
+| Eminescu | Provisional pass | Clear boundary and internal structures support comparison with central topography |
+| Scarlatti | Provisional pass | Internal and external structures are discernible; bright arcs cannot be equated with elevation peaks |
+| Holbein | Hold | Adjacent or overlapping structures leave the complete target boundary ambiguous |
+| Giotto | Provisional pass | Large-scale target and depression are discernible; small bright patches cannot establish composition or age |
 
-技术检查 12 例均通过；最小有效像元比例约为 99.654%。视觉初筛为 7 例通过、5 例暂缓。
-暂缓案例仍保留在审核总表，不删除、不替换、不把它们从原始样本数中隐藏。
-此开发集偏向边界较清晰的目标，不能用于无偏估计全体水星陨石坑的性能。
+All twelve cases passed technical checks; minimum valid-pixel coverage was approximately 99.654%. Visual screening yielded seven provisional passes and five holds. Held cases remain in the audit table and original sample count. This development set favours clearer boundaries and cannot provide an unbiased estimate across all Mercury craters.
 
-## 固定的四个问题
+## Four fixed questions
 
-每个通过案例采用完全相同的问题模板，只替换目标名称。完整措辞和答题要求冻结在
-`configs/mercury_questions_v1.json`，版本为 `mercury-questions-1.0`。
+Every accepted case used identical templates with only the target name substituted. Wording and answer requirements were frozen as `mercury-questions-1.0`. The maintained English edition in `configs/mercury_questions_v1.json` is `mercury-questions-1.0-en.1`; archived run copies remain unchanged.
 
-| ID | 科研问题 | 主要约束 |
+| ID | Research question | Main constraint |
 | --- | --- | --- |
-| Q1 | 如何调查坑缘连续性、坑底形态和内部结构？ | 方法须可操作且互有区别；目录代码不是答案 |
-| Q2 | 如何检验东西地形不对称，并区分区域背景坡度？ | 剖面高差不是坑深；缺少地形时承认无法检验 |
-| Q3 | 如何检验影像结构与高程变化的空间对应？ | 区分配准、分辨率和可能地貌差异；不强行声称对应 |
-| Q4 | 如何利用局部及区域背景提出可检验的改造假说？ | 必须有支持/反驳证据和替代解释；允许证据不足 |
+| Q1 | How can rim continuity, floor morphology and internal structures be investigated? | Distinct executable methods; catalogue codes do not supply the answer |
+| Q2 | How can east-west topographic asymmetry be tested and separated from regional slope? | Profile relief is not crater depth; acknowledge missing topography |
+| Q3 | How can spatial correspondence between image structures and elevation changes be tested? | Distinguish registration, resolution and possible geomorphic differences |
+| Q4 | How can local and regional context support testable modification hypotheses? | Specify supporting and contradictory evidence, alternatives and evidence gaps |
 
-这些是科研调查问题，不是要求模型复述预先给定的地质答案，也不预设唯一正确模态组合。
-审核员的逐例解释不进入选模请求。未来标注时不能将它们作为答案真值。
+These questions invite scientific investigation without a predetermined geological answer or uniquely correct modality pair. Case-review explanations are excluded from selection requests and must not serve as answer ground truth.
 
-## 输入包如何使用
+## Input packages
 
-生成目录：`experiments/benchmarks/mercury-screened-v1-20260906/`。
+Output directory: `experiments/benchmarks/mercury-screened-v1-20260906/`.
 
-- `audit.json`：全部 12 例的状态、原因、检查结果、来源与代码校验值。
-- `visual_reviews.json`：冻结的助手视觉初筛；明确注明不是专家认证。
-- `questions.json`：四个固定问题与通用答案要求。
-- 每个通过案例的 `package.json`：目标身份、可用模态、表示类型、限制、单位、来源和文件校验值。
-- 每例 `evidence/`：目录记录、两幅数值影像及预览、数值 DEM 及预览、东西向数值剖面，共 8 个文件。
-- 每例 `Q1-budget-3.json` 等：结构化选模请求、规则结果及仅属于所选模态的文件清单。
+- `audit.json`: all twelve statuses, reasons, checks, provenance and code hashes.
+- `visual_reviews.json`: frozen assistant screening, explicitly distinct from expert certification.
+- `questions.json`: four fixed questions and common answer requirements.
+- Per-case `package.json`: target identity, modalities, representations, limitations, units, provenance and file hashes.
+- Per-case `evidence/`: catalogue record, two numeric images and previews, numeric DEM and preview, and numeric east-west profile; eight files in total.
+- Per-case records such as `Q1-budget-3.json`: structured selection request, rule result and a manifest restricted to selected modalities.
 
-共 7 个案例输入包、28 个案例—问题组合；两档预算形成 56 条准备记录。
-预算 3 和 5 使用原有实验单位：目录 1、影像 2、地形 2，不代表实际 token 或时延。
+Seven input packages and 28 case–question scenarios produced 56 preparation records across two budgets. Budgets 3 and 5 used ordinal costs of catalogue 1, imagery 2 and topography 2, without measured token or latency meanings.
 
-`request` 用于元数据选模；`selected_files` 才是所选证据清单。文件路径相对于对应案例目录，
-每个文件有大小、SHA-256、单位、科学模态、表示类型、来源 ID 和必要的父文件关系。
-实际模型接入后必须按清单加载文件，不能把整个可用证据目录送入模型。
-数值 GeoTIFF 是可追溯的科学载体，不表示任何模型都能直接理解该格式；模型适配器仍待实现。
+`request` supplies selection metadata; `selected_files` identifies accessible evidence. Paths are relative to the case directory. Each file records size, SHA-256, units, scientific modality, representation, source ID and parent relationships where applicable. A model adapter must load only the selected manifest. Numeric GeoTIFFs preserve scientific provenance; they still require a suitable model representation.
 
-混合光学图与高程剖面的 `overview.png` 仅用于审核，没有打包成模型证据，防止模态消融泄漏。
-人工审核意见保留在审核层，而不是加入答案提示。所有 `quality_score` 保持未知，未伪造质量评分。
+The mixed optical/profile `overview.png` was reserved for review and excluded from model evidence to prevent modality leakage. Review judgments remain in the audit layer. Every `quality_score` is unknown; none was fabricated.
 
-每个案例目录可独立搬移，并使用 `verify_package()` 验证所有证据。
-总表中的源文件收据仍描述外部原始归档；约 4.8 GB 的全球源数据没有复制进输入包。
-搬移时保留整个基准目录可同时保留问题、审核和源文件说明。
+Each case directory can be relocated and checked with `verify_package()`. Source receipts describe the external archive; approximately 4.8 GB of global data were not copied into these packages. Moving the complete benchmark directory also preserves question, review and source documentation.
 
-## 重建与验证
+## Reproduction and verification
 
-安装现有可选 `pilot` 依赖后，使用一个尚不存在的输出目录：
+With the optional `pilot` dependencies installed, choose a new output directory:
 
 ```powershell
 $env:MPLCONFIGDIR = "$PWD/.cache/matplotlib"
@@ -97,16 +85,10 @@ $env:MPLCONFIGDIR = "$PWD/.cache/matplotlib"
   --output experiments/benchmarks/mercury-screened-v1-repeat
 ```
 
-构建为只创建模式，既有输出拒绝覆盖；视觉记录固定源运行哈希，不会自动批准未经查看的新案例。
-单元测试只用明确标注的合成栅格，覆盖异常输入、暂缓门槛、文件篡改、搬移和模态隔离。
+The builder refuses existing outputs. Visual records are pinned to the source-run hash and cannot automatically approve uninspected cases. Unit tests use explicitly synthetic rasters and cover invalid inputs, hold decisions, tampering, relocation and modality isolation.
 
-本轮最终验证：125 项离线测试通过，代码规范及格式检查通过；真实输入包的 56 个证据文件
-（302,840,011 字节）及 56 条准备记录再次核验通过。存在第三方栅格库的待弃用警告，
-不影响测试结果。总表中的问题/审核哈希固定仓库原始配置；输出副本重新序列化后排版可不同。
+Historical final verification: 125 offline tests passed, with lint and format checks passing. All 56 evidence files (302,840,011 bytes) and 56 preparation records were reverified. Third-party raster deprecation warnings did not affect results. The audit pins original configuration hashes; reserialized output copies may differ in formatting.
 
-## 下一步
+## Historical next steps
 
-请领域专家优先复核 7 个初筛通过案例，并对 5 个暂缓案例决定补充数据或继续排除。
-随后确定固定答案格式和评估规则；要进入模型调用阶段，先调整当前项目的“不调用 LLM”约束。
-届时保持问题与答案生成条件一致，对全模态、单模态和预算受限规则选择开展盲评。
-未完成这些步骤前，不报告“答案更丰富”或“自主选模优于其他方法”。
+Domain experts were asked to review the seven provisional passes and decide whether the five held cases needed additional data or continued exclusion. Fixed answer settings and evaluation rules were then needed before model inference and blind comparison. This report did not establish improved answer richness or agent superiority. Current work follows `primary_experiments.md`.

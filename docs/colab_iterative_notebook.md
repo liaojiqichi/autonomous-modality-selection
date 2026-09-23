@@ -15,7 +15,7 @@ are stored in Git. The new notebook does not run acquisition or repeat the pilot
    This notebook retains the working Qwen3-VL-8B 4-bit setup. It does not validate
    a new Gemma loading configuration.
 3. In section 3, check CASE_DIR and RESULTS_ROOT. The defaults match the uploaded
-   notebook: `/content/mercury-pilot-001/crater-16604`, with run `emin-agentic-001`.
+   notebook: `/content/mercury-pilot-001/crater-16604`, with run `emin-agentic-en-001`.
    Use a new RUN_LABEL when changing configuration. Persist results to your own
    Drive location if desired; no Drive mount is performed automatically.
 4. Run sections 3 through 7 in order. Source TIFFs are checked and read only.
@@ -36,7 +36,7 @@ receipt-verified input content after its first acquisition. Its final answer goe
 through the exact same `answer_question` function as every other condition. Selector
 rationales are logged separately and never appended to the answer prompt.
 
-The output schema is `colab-ap-agentic-development-3`. Iterative records add an
+The output schema is `colab-ap-agentic-development-en-4`. Iterative records add an
 `iterative_selection` trace; all records retain the familiar `answer`, `selected`,
 `selection_generations` and `answer_generations` fields. A failed acquisition prevents
 answer generation and retains previously accessed data and cost. Hash checks guard
@@ -54,6 +54,14 @@ and 1024-token answer cap. Old successful runs should remain historical, not be
 silently merged with this fresh five-condition run. A/P annotation and independent
 quality checks remain unchanged. More interactions alone are not an outcome benefit.
 
+Questions, selector free-text fields and final answers use English. The answer
+policy requests approximately 200-300 words, uniformly across conditions; this is
+a new language/length protocol, not an exact equivalent of the old Chinese
+character limit. CONFIG records `language=en` and `language_protocol=english-ap-1.0`.
+Question configurations carry an `-en.1` suffix and the iterative prompt version is
+`bounded-evidence-selector-ap-1.1-en`. Start a fresh run, rerun the preflight,
+and retain earlier results separately. No scientific data need to be downloaded again.
+
 ## Local verification
 
 Tests parse all notebook cells and execute the actual selection/answer routing and
@@ -62,6 +70,12 @@ They cover evidence hashes, cumulative budget, failed revisions, resume and fina
 answer isolation. This is not a GPU/model-validation claim: Colab must still run
 the included multimodal input preflight and actual generation.
 
-`examples/upgrade_colab_notebook.py` documents the fail-closed migration from the
-original AP notebook. It creates a new file and removes outputs, without executing
-the input. The committed notebook has additionally been formatted and linted.
+`examples/upgrade_colab_notebook.py` now exports the maintained English template.
+It creates a new file, removes outputs and refuses to overwrite existing files.
+The optional legacy `--source` argument records only the source hash; source cells
+and local settings are not migrated or executed. Review paths, model settings and
+RUN_LABEL in the exported notebook:
+
+```powershell
+python examples/upgrade_colab_notebook.py --output tmp/colab-english-new.ipynb
+```

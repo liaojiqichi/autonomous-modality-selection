@@ -61,7 +61,7 @@ def test_notebook_is_clean_and_compiles() -> None:
             assert "autonomous_modality.pilot --" not in source
     assert "use_model_defaults=False" in cell_with("def generate_reply")
     assert "do_sample=False" in cell_with("def generate_reply")
-    assert 'RUN_LABEL = "emin-agentic-001"' in cell_with("class ViewReceipt")
+    assert 'RUN_LABEL = "emin-agentic-en-001"' in cell_with("class ViewReceipt")
 
 
 @pytest.fixture

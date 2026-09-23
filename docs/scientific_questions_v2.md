@@ -1,66 +1,51 @@
-# 第二版：影像＋地形对照与科学解释问题
+# Second version: imagery–topography control and scientific interpretation questions
 
-> 历史／辅助协议，不作为新实验操作指南；以 primary_experiments.md 的 A/P 双模型协议为准。
-> Q5–Q7 的定量前提不再属于当前论文交付；保留本文用于解释已有档案。
+> Historical auxiliary protocol. Use `primary_experiments.md` for current A/P dual-model experiments.
+> Quantitative work in Q5–Q7 is outside current thesis deliverables.
+> This is an English translation of the historical report at commit `3b91476`; it records no new scientific review or execution.
 
-本轮只扩展离线准备流程，未调用 LLM、未下载或伪造模拟、未计算撞击参数。
-第一版 56 条记录、问题配置和全部源数据保持不变。
+This stage extended offline preparation. It made no LLM calls, downloaded or fabricated no simulations, and estimated no impact parameters. The first version's 56 records, frozen question copies and source data were preserved.
 
-## 固定对照
+## Fixed control
 
-新增条件 `fixed-image-topography`：必须同时选择 OPTICAL_IMAGE 和 TOPOGRAPHY，
-最多两类、预算 4，其他模态禁止。不是“预算 4 下自由选择”。必需资产不可用时明确报错，
-不悄悄换成目录。影像和地形的七个文件被路由，目录文件和混合模态总览图不进入证据清单。
+The `fixed-image-topography` condition requires both OPTICAL_IMAGE and TOPOGRAPHY, with at most two modalities and budget 4; other modalities are disallowed. Missing required assets produce an explicit error. There is no silent catalogue substitution. Seven imagery and topography files are routed; catalogue files and mixed-modality overviews are excluded.
 
-第二版所有条件都以名字和坐标作为共同目标上下文，不通过 CraterReference 附带目录直径。
-目录直径和历史分类只能从选中的目录证据取得。可用资产元数据仍供选择器查看，但不等于
-生成答案时可以访问未选中的证据。数值栅格本身的空间范围也可能间接暴露目标尺度，
-因此这个对照不是完全消除一切先验直径信息的盲测。
+All second-version conditions share target name and coordinates. CraterReference no longer supplies catalogue diameter. Catalogue diameter and historical classifications are available only through selected catalogue evidence. Asset metadata remain available to the selector; answer generation is restricted to selected evidence. Raster extent may indirectly reveal target scale, so some prior diameter information may remain.
 
-由于共同上下文策略发生了变化，第二版预算 3/5 记录也重新生成。正式比较应在第二版内部进行，
-不要把旧版和新版的答案直接混合。历史版本依然可读取，不改写历史结果。
+The changed shared-context policy required regenerating budget-3 and budget-5 preparation records. Comparisons should remain within this version. Historical results remain readable and unchanged.
 
-## 新增科学问题
+## Additional scientific questions
 
-Q1–Q4 的文字和答题要求保持不变。问题配置版本为 `mercury-questions-2.0`，新增：
+Q1–Q4 retained their original wording and answer requirements. The historical configuration version was `mercury-questions-2.0`. The maintained English edition is `mercury-questions-2.0-en.1`.
 
-| 问题 | 科学目标 | 定量回答的必要准备 |
+| Question | Scientific objective | Prerequisites for quantitative answers |
 | --- | --- | --- |
-| Q5：撞击参数多解性 | 找到能产生相近最终直径的尺寸、速度、角度、靶体热状态组合，再用坑形约束排除部分解 | 最终直径及误差、适用尺度的真实模拟网格、统一观测与模拟定义 |
-| Q6：哪项新增观测能区分模型 | 对同样符合直径的模型，比较坑底起伏、坑缘几何和内部结构的额外区分能力 | 候选模型预测、可重复的特征测量和误差、预先固定的接受准则 |
-| Q7：浅坑的竞争解释 | 在更浅这一前提得到验证后，区分物质填充、地形松弛、背景坡度或测量偏差 | 可靠坑深定义及测量、匹配参考坑、适用前向模型及文献 |
+| Q5: impact-parameter degeneracy | Identify impactor size, velocity, angle and target thermal-state combinations producing similar final diameters; constrain them with morphology | Final diameter and uncertainty, a real simulation grid at an applicable scale, consistent observational and simulation definitions |
+| Q6: discriminating additional observations | Compare the additional discriminating value of floor relief, rim geometry and internal structures for models matching diameter | Candidate predictions, reproducible feature measurements and uncertainties, predefined acceptance criteria |
+| Q7: competing explanations for shallowness | Once shallowness is established, distinguish infilling, relaxation, background slope and measurement bias | Reliable depth definition and measurement, matched reference craters, applicable forward models and literature |
 
-这些问题是面向当前目标的研究设计，不声称七例都属于大型盆地，也不声称它们已经被发现更浅。
-Q5 明确禁止直接套用 Caloris 的参数。若要真正分析 Caloris，需要另建盆地案例、审核相应观测
-和模拟，不能将当前小尺度裁剪当作 Caloris 证据。
+These are target-specific research designs. They do not establish that all seven targets are large basins or unusually shallow. Q5 explicitly prohibits directly transferring Caloris parameters. A Caloris analysis would require a separate basin case with reviewed observations and simulations.
 
-设计背景为先前核对的 [Caloris SPH 研究](https://arxiv.org/abs/2608.26957)：
-从单一盆地大小转向多观测约束。Q5–Q7 是本项目提出的问题，不是论文提供的答案或模拟数据。
+The historical design drew on the previously checked [Caloris SPH study](https://arxiv.org/abs/2608.26957), moving from basin size alone to multiple observational constraints. Q5–Q7 were formulated by this project; the paper did not supply their answers or simulation assets.
 
-## 定量准备状态
+## Quantitative readiness
 
-每条记录新增：
+Preparation records add:
 
-- `condition`：区分自由预算选择和固定组合。
-- `missing_quantitative_modalities`：完整定量工作所需、但本次未选择的模态。
-- `unverified_quantitative_prerequisites`：尚未验证的测量、参数网格和误差模型等。
-- `quantitative_status`：`not_ready` 表示上述条件未满足；`not_assessed` 仅表示没有完成这种审核，
-  不等于科学上可完整回答。
+- `condition`: distinguishes free budget-constrained selection from the fixed pair.
+- `missing_quantitative_modalities`: modalities needed for the full quantitative task but not selected.
+- `unverified_quantitative_prerequisites`: unverified measurements, parameter grids, uncertainty models and related requirements.
+- `quantitative_status`: `not_ready` indicates unmet requirements; `not_assessed` indicates that this review has not been performed.
 
-条件检查独立于问题措辞。不会因为写了一个提示就声称验证了模拟适用性或科学测量。
-新问题的全部定量前提目前仍未验证；因此所有 Q5–Q7 都标记为 `not_ready`。
-它们仍可以用于检验系统如何提出分析流程、识别缺失数据和承认无法给出具体参数。
-当前规则评分未升级成物理反演或自动计算信息增益的方法。
+Checks operate independently of question wording. All prerequisites for the new questions remain unverified, so every Q5–Q7 record is `not_ready`. These questions can still test proposals for analysis, recognition of missing evidence and acknowledgment that specific parameter estimates are unavailable. Rule scores do not perform physical inversion or automatic information-gain estimation.
 
-Q7 的完整研究可能需要超过当前一次选择的三类模态；本版仅记录这一缺口，
-没有突破分类、数量限制或用低成本假资产掩盖它。完整执行需后续多阶段工作流。
+A complete Q7 investigation may require more than the three modalities permitted in the historical single selection. The record documents this gap; a complete execution would require a later multistage workflow.
 
-## 输出和复现
+## Outputs and reproduction
 
-新目录 `experiments/benchmarks/mercury-screened-v2-20260907/`：
-7 个已审核案例 × 7 个问题 × 3 种条件，共 147 条准备记录。
-其中固定对照 49 条；新增科研问题 63 条，全部为定量未就绪。
-准备记录不是生成答案，也不是 147 个独立科学样本。
+Directory: `experiments/benchmarks/mercury-screened-v2-20260907/`.
+
+Seven screened cases × seven questions × three conditions produced 147 preparation records, including 49 fixed-pair controls and 63 additional-question records. All 63 were quantitatively unready. Preparation records contain no generated answers and do not constitute 147 independent scientific samples.
 
 ```powershell
 $env:MPLCONFIGDIR = "$PWD/.cache/matplotlib"
@@ -72,11 +57,8 @@ $env:MPLCONFIGDIR = "$PWD/.cache/matplotlib"
   --output experiments/benchmarks/mercury-screened-v2-repeat
 ```
 
-输出目录必须不存在。已有 12 例技术检查重新执行，复用的助手视觉审核日期仍为原日期，
-不冒充新专家审核。通过状态仍为有限探索用途的 provisional_pass。
+The output directory must be new. Technical checks are rerun for all twelve existing cases. Reused assistant-screening records retain their original date and `provisional_pass` status for limited exploratory use.
 
-## 后续最小实证步骤
+## Historical next empirical step
 
-优先为 Q5/Q6 选择一个与已公开模拟网格尺度匹配的目标，获取真实参数表、模型输出和
-适用性说明；在正式筛选前固定直径误差、模型接受容差与额外观测定义。
-当前没有这些资产，因此不能输出“哪些真实撞击参数已经被排除”的结论。
+For Q5/Q6, the proposed next step was to identify a target matching the scale of a published simulation grid, obtain real parameter tables, outputs and applicability documentation, and fix diameter uncertainty, model-acceptance tolerances and additional-observation definitions before screening. Those assets were unavailable, so the project could not identify excluded impact-parameter combinations. This quantitative extension remains outside current A/P thesis deliverables.

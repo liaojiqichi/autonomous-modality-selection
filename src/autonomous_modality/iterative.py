@@ -24,7 +24,7 @@ from autonomous_modality.models import (
 )
 
 PROTOCOL_VERSION = "bounded-evidence-agent-1.0"
-PROMPT_VERSION = "bounded-evidence-selector-ap-1.0"
+PROMPT_VERSION = "bounded-evidence-selector-ap-1.1-en"
 SELECTOR_INSTRUCTIONS = """Select scientific evidence for the given research question.
 The outcomes are distinct executable analytical approaches (A) and explanatory
 perspectives (P). Scientific validity and evidence fidelity are separate checks.
@@ -41,6 +41,7 @@ Return exactly one JSON object, without markdown or additional prose:
  "intended_use":"how the additional evidence will help","reason":"brief justification"}
 or {"action":"FINISH","reason":"why further acquisition is unnecessary"}.
 Describe planned analyses as proposed; claim execution only for supplied results.
+Write all free-text fields entirely in English.
 """
 
 Count = Annotated[int, Field(ge=0, strict=True)]
@@ -142,7 +143,9 @@ class IterativeSelection(StrictModel):
     model_id: NonEmptyString
     request: InputSelectionRequest
     policy: IterativePolicy
-    prompt_version: Literal["bounded-evidence-selector-ap-1.0"] = PROMPT_VERSION
+    prompt_version: Literal[
+        "bounded-evidence-selector-ap-1.0", "bounded-evidence-selector-ap-1.1-en"
+    ] = PROMPT_VERSION
     prompt_sha256: Digest
     implementation_sha256: Digest
     status: Literal["ready", "error"]

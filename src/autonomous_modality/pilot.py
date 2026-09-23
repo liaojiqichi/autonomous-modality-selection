@@ -1,6 +1,4 @@
 """Offline real-product preparation and deterministic selection pilot (no LLM calls)."""
-# Chinese report text deliberately uses Chinese punctuation.
-# ruff: noqa: RUF001
 
 from __future__ import annotations
 
@@ -545,14 +543,15 @@ def write_report(run: PilotRun, root: Path) -> None:
     )
     cards = "".join(
         f"<section><h2>{html.escape(case.catalogue.name)} · {case.catalogue.diameter:g} km</h2>"
-        f"<p>目录 ID {case.catalogue.id}；纬度 {case.catalogue.lat_n}°；"
-        f"东经 {case.catalogue.lon_e_0}°；"
-        f"有效像元比例：{', '.join(f'{p.valid_fraction:.2%}' for p in case.products)}；"
-        f"准备检查：{'通过' if case.accepted else '未通过'}</p>"
-        f'<img src="crater-{case.catalogue.id}/overview.png" alt="实际影像裁剪和高程剖面">'
-        f'<p><a href="crater-{case.catalogue.id}/dem_local.png">高程图</a> · '
-        f'<a href="crater-{case.catalogue.id}/east_west_profile.csv">剖面数值</a> · '
-        f'<a href="crater-{case.catalogue.id}/catalogue.json">目录记录</a></p></section>'
+        f"<p>Catalogue ID {case.catalogue.id}; latitude {case.catalogue.lat_n}°; "
+        f"east longitude {case.catalogue.lon_e_0}°; "
+        f"valid-pixel fractions: {', '.join(f'{p.valid_fraction:.2%}' for p in case.products)}; "
+        f"preparation check: {'passed' if case.accepted else 'failed'}</p>"
+        f'<img src="crater-{case.catalogue.id}/overview.png" '
+        'alt="Real image crop and elevation profile">'
+        f'<p><a href="crater-{case.catalogue.id}/dem_local.png">Elevation map</a> · '
+        f'<a href="crater-{case.catalogue.id}/east_west_profile.csv">Profile values</a> · '
+        f'<a href="crater-{case.catalogue.id}/catalogue.json">Catalogue record</a></p></section>'
         for case in run.cases
     )
     template = Template(Path(__file__).with_name("pilot_report.html").read_text(encoding="utf-8"))

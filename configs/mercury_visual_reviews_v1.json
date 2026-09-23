@@ -1,19 +1,139 @@
 {
-  "version": "visual-review-1.0",
+  "version": "visual-review-1.0-en.1",
   "source_run_sha256": "65b068837faa1658372884eec2cff041ca264901049d18fa1e1a57c532808e2d",
   "reviewed_utc": "2026-09-06T08:11:55Z",
   "reviews": [
-    {"case_id": 5031, "status": "provisional_pass", "observation": "局部影像的坑缘与内部结构可辨，红色目录点位于坑内近中心；DEM 中对应位置呈现低地及较高边缘，东西剖面穿越该结构。", "concern": "仅支持粗尺度形态与对应关系调查，未测量配准误差，不能由亮斑推断成分。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 734, "status": "hold", "observation": "影像中目标边界对比度较低；DEM 的主要低地区域在目录点南侧，目录点接近低地北缘。", "concern": "暂缓：需要复核目录中心与可见坑缘，不能确定偏移来自目录、地形不对称性还是配准。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 2179, "status": "provisional_pass", "observation": "局部影像中近圆形边界包围目录点；DEM 呈中心低地，东侧区域高于西侧，剖面也显示背景不对称。", "concern": "区域坡度与坑缘高度尚未分离，不把剖面高差视为坑深或成因证据。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 4512, "status": "hold", "observation": "影像中目标坑缘较弱且不完整；DEM 的中心低地横向范围与影像中候选边界不易一一对应，东西剖面高度不对称。", "concern": "暂缓：先复核边界和空间对应，不能将不一致直接判为真实改造或数据错误。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 858, "status": "provisional_pass", "observation": "目录点位于可辨认目标内部；影像可见内部结构及南北邻近坑，DEM 中可见对应的粗尺度低地与中心起伏。", "concern": "照明不均与邻近结构可能影响形态判断，细小结构不能由平滑 DEM 确认。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 6611, "status": "hold", "observation": "目录点位于 DEM 大尺度低地内，但光学影像坑缘对比度低，亮暗纹理较强，难以稳定追踪完整边界。", "concern": "暂缓首批基准：需要不同照明或更合适影像的专家复核；低对比度不等于源数据无效。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 1695, "status": "hold", "observation": "局部影像存在明显斜向拼接边界，跨过目标区域，边界两侧纹理和照明显著不同；DEM 仍显示中心低地。", "concern": "暂缓：拼接与照明差异会混淆坑缘连续性和后期改造判断，需要替代影像或明确拼接掩膜。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 4870, "status": "provisional_pass", "observation": "影像中宽阔环形边界与中心区域可辨；DEM 中对应区域相对周边边缘较低，剖面显示明显东西差异。", "concern": "纹理和内部小坑复杂，批准仅限粗尺度探索；东西差异不自动证明某种改造。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 16604, "status": "provisional_pass", "observation": "影像中坑缘和明亮内部结构清楚，目录点落在内部结构附近；DEM 呈相应低地及中心局部较高区域。", "concern": "明亮结构不等于成分信息；平滑 DEM 不能分辨影像中所有细节，配准误差未量化。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 19610, "status": "provisional_pass", "observation": "局部影像的外部边界和内部弧状结构可辨，DEM 中目录点落在低地区域，可比较大尺度内外结构。", "concern": "不能将明亮弧状结构直接等同于高程峰值；需要专门的空间匹配检验。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 908, "status": "hold", "observation": "影像中存在多个重叠或邻近圆形结构，目录点附近的目标完整边界不够明确；DEM 中低地与周边多个结构相邻。", "concern": "暂缓：先明确目标边界和目录记录对应，避免把邻近结构混入定量比较。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]},
-    {"case_id": 1851, "status": "provisional_pass", "observation": "大尺度近圆形目标及内部纹理可辨，目录点位于内部；DEM 中相应区域为宽阔低地，东侧周边高地明显。", "concern": "小亮斑和弱坑缘细节不能据此解释成分或年龄；先进行粗尺度形态与背景对照。", "reviewer": "Codex visual screening; not a planetary-science expert", "evidence_files": ["overview.png", "dem_local.png"]}
+    {
+      "case_id": 5031,
+      "status": "provisional_pass",
+      "observation": "The local image shows a discernible rim and internal structure. The red catalogue point lies near the interior centre. The DEM shows a corresponding depression and higher margins, crossed by the east-west profile.",
+      "concern": "Suitable for coarse-scale morphology and correspondence studies only. Registration error has not been measured. Bright patches do not establish composition.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 734,
+      "status": "hold",
+      "observation": "The target boundary has low image contrast. The main DEM depression lies south of the catalogue point, which is close to its northern edge.",
+      "concern": "Hold pending review of the catalogue centre and visible rim. The displacement could reflect catalogue coordinates, terrain asymmetry or registration.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 2179,
+      "status": "provisional_pass",
+      "observation": "A roughly circular image boundary surrounds the catalogue point. The DEM shows a central depression and higher terrain to the east; the profile also shows background asymmetry.",
+      "concern": "Regional slope and rim elevation have not been separated. Profile relief must not be treated as crater depth or evidence of origin.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 4512,
+      "status": "hold",
+      "observation": "The image rim is weak and incomplete. The lateral extent of the central DEM depression is difficult to match to candidate image boundaries. The east-west profile is asymmetric.",
+      "concern": "Hold pending boundary and spatial-correspondence checks. The mismatch cannot directly establish modification or data error.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 858,
+      "status": "provisional_pass",
+      "observation": "The catalogue point lies inside a discernible target. Internal structures and neighbouring northern and southern craters are visible. The DEM shows corresponding coarse-scale low terrain and central relief.",
+      "concern": "Uneven illumination and neighbouring structures may affect morphology interpretation. The smoothed DEM cannot confirm small features.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 6611,
+      "status": "hold",
+      "observation": "The catalogue point lies within a broad DEM depression. The optical rim has low contrast and strong brightness texture makes the complete boundary difficult to trace consistently.",
+      "concern": "Hold from the initial benchmark pending expert review with different illumination or more suitable imagery. Low contrast does not establish invalid source data.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 1695,
+      "status": "hold",
+      "observation": "A prominent diagonal mosaic seam crosses the target. Texture and illumination differ substantially across it. The DEM still shows a central depression.",
+      "concern": "Hold: mosaic and illumination differences may confound rim-continuity and modification interpretations. Alternative imagery or an explicit seam mask is needed.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 4870,
+      "status": "provisional_pass",
+      "observation": "A broad annular boundary and central region are discernible in the image. The corresponding DEM interior is lower than surrounding margins; the profile shows pronounced east-west differences.",
+      "concern": "Complex texture and small interior craters limit approval to coarse-scale exploration. East-west differences alone do not establish a modification mechanism.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 16604,
+      "status": "provisional_pass",
+      "observation": "The rim and bright internal structures are clear in the image. The catalogue point lies near the internal structures. The DEM shows a corresponding depression and locally elevated central terrain.",
+      "concern": "Brightness does not establish composition. The smoothed DEM cannot resolve every image detail. Registration error remains unquantified.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 19610,
+      "status": "provisional_pass",
+      "observation": "The local image shows an outer boundary and internal arcs. The catalogue point lies in a DEM depression, allowing comparison of large-scale internal and external structures.",
+      "concern": "Bright arcs cannot be equated directly with elevation peaks. Dedicated spatial-matching tests are needed.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 908,
+      "status": "hold",
+      "observation": "Several overlapping or adjacent circular structures make the complete target boundary near the catalogue point ambiguous. The DEM depression adjoins several surrounding structures.",
+      "concern": "Hold pending identification of the target boundary and its correspondence to the catalogue record. Quantitative comparisons must avoid contamination by neighbouring structures.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    },
+    {
+      "case_id": 1851,
+      "status": "provisional_pass",
+      "observation": "A large, roughly circular target and internal texture are discernible, with the catalogue point inside. The corresponding DEM area is a broad depression with prominent higher terrain to the east.",
+      "concern": "Small bright patches and weak rim details cannot establish composition or age. Begin with coarse-scale morphology and background comparisons.",
+      "reviewer": "Codex visual screening; not a planetary-science expert",
+      "evidence_files": [
+        "overview.png",
+        "dem_local.png"
+      ]
+    }
   ]
 }
