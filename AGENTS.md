@@ -27,6 +27,22 @@ scientific input-data-modality selection for Mercury crater questions.
 
 ## Engineering rules
 
+### Iterative development extension
+
+- AGENT_ITERATIVE is the new feedback condition; AGENT retains historical one-shot
+  semantics as an auxiliary ablation. Keep the original CLI default compatible.
+- Acquire at most two existing modality packages, one per request, with one
+  observation-informed revision. Log explicit model FINISH separately from system stops.
+- Count all accessed evidence cumulatively. No replacement/refunds or hidden retries.
+- Return verified real evidence through the existing evidence-view adapter; preserve
+  raw/derived packages read-only. Selector rationales must not enter the answer context.
+- Declare cost units explicitly. Historical 1/2/2 costs are ordinal, never measured
+  tokens. Token budgets require externally measured/frozen processor-specific costs.
+- This extension is a development experiment, not a rewritten signed proposal.
+- Keep acquisition traces and tests separate from real model results and historical runs.
+
+### General rules
+
 - Target Python 3.12 or later.
 - Use the `src` package layout.
 - Add type annotations to all public functions and methods.

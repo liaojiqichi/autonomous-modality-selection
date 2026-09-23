@@ -1,6 +1,12 @@
 # Active experiment protocol: richness-ap-dual-model-2.0
 
-The sole active configuration is configs/experiment_protocol.json, bound to the final
+An opt-in [iterative agent development extension](iterative_agent.md) adds
+AGENT_ITERATIVE as the new feedback condition and retains AGENT as a one-shot
+ablation. The historical four-condition protocol below is preserved for compatibility.
+The extension uses fresh runs and explicitly declared cost units; legacy costs below
+are not token costs.
+
+The historical base configuration is configs/experiment_protocol.json, bound to its
 PDF checksum. Earlier preparations remain historical and must not be pooled.
 
 ## Design

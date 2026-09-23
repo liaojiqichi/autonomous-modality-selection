@@ -1,5 +1,16 @@
 # Autonomous Input Modality Selection
 
+New opt-in development experiment: [bounded iterative agent](docs/iterative_agent.md).
+`AGENT_ITERATIVE` acquires real existing evidence at most twice, with one feedback
+decision and cumulative access costs. Historical `AGENT` remains the one-shot
+ablation. The default preparation interface and existing data are preserved.
+
+Ready-to-upload Colab notebook:
+[autonomous_modality_selection_iterative.ipynb](notebooks/autonomous_modality_selection_iterative.ipynb).
+It adapts the user's working AP notebook, retains its receipt-based inputs and
+generation interface, and runs 36 development attempts per crater/model. See the
+[notebook instructions](docs/colab_iterative_notebook.md) before running.
+
 Active design: [experiment protocol](docs/primary_experiments.md).
 Research summary: [proposal alignment](docs/research_proposal.md).
 Annotation: [A/P rubric](docs/richness_annotation.md).
@@ -44,6 +55,9 @@ reviewed split with 30 independent held-out craters; this gate is deliberately c
 - `models.py`, `evaluation.py`: A/P annotations with spans, duplicate groups and quality.
 - `protocol.py`, `configs/experiment_protocol.json`: final-proposal design constants.
 - `experiments.py`: checksummed, paired dual-model preparation.
+- `iterative.py`, `iterative_evidence.py`, `iterative_colab.py`: bounded acquisition,
+  read-only evidence packages and an opt-in bridge to the existing Colab generator.
+- `examples/colab_iterative.py`: run only the new condition using an already loaded model.
 - `benchmark.py`, `pilot.py`, `acquisition.py`: reusable read-only source validation,
   crop extraction and evidence packaging; older trial commands are auxiliary.
 - `selection.py`, `ams-demo`: deterministic AUXILIARY baseline, never the AI agent.

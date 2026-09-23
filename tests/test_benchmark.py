@@ -352,6 +352,33 @@ def test_four_condition_cli_and_evidence_isolation(
                 assert answer["evidence_paths"] == [] and row["evidence"] == []
     with pytest.raises(ValueError, match="new directory"):
         main()
+    iterative_output = tmp_path / "iterative-primary"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "experiments",
+            "--benchmark",
+            str(destination.parent),
+            "--output",
+            str(iterative_output),
+            "--include-iterative",
+        ],
+    )
+    main()
+    extended = PreparationRun.model_validate_json(
+        (iterative_output / "preparation.json").read_text(encoding="utf-8")
+    )
+    assert len(extended.records) == 72
+    assert extended.experimental_extension == "bounded-evidence-agent-1.0"
+    rows = [r for r in extended.records if r.selection.condition == "AGENT_ITERATIVE"]
+    assert len(rows) == 8
+    assert all(r.selection.status == "pending_agent" and r.answer_input is None for r in rows)
+    # The same seed gives byte-equivalent selections for every original condition.
+    assert [
+        r.model_dump(mode="json")
+        for r in extended.records
+        if r.selection.condition != "AGENT_ITERATIVE"
+    ] == run["records"]
     monkeypatch.setattr(
         "sys.argv",
         [

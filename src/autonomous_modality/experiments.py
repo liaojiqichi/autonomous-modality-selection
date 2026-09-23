@@ -32,6 +32,7 @@ class ExperimentCondition(StrEnum):
     ALL_AVAILABLE = "ALL_AVAILABLE"
     RANDOM = "RANDOM"
     AGENT = "AGENT"
+    AGENT_ITERATIVE = "AGENT_ITERATIVE"
 
 
 class ExperimentSelection(StrictModel):
@@ -56,9 +57,10 @@ class ExperimentSelection(StrictModel):
                 raise ValueError("empty or unresolved condition cannot contain selected evidence")
         elif not self.selected_asset_ids:
             raise ValueError("ready data condition requires evidence")
-        if self.status == "pending_agent" and self.condition != ExperimentCondition.AGENT:
+        agent_conditions = {ExperimentCondition.AGENT, ExperimentCondition.AGENT_ITERATIVE}
+        if self.status == "pending_agent" and self.condition not in agent_conditions:
             raise ValueError("only agent selection can be pending")
-        if self.condition == ExperimentCondition.AGENT and self.status == "ready":
+        if self.condition in agent_conditions and self.status == "ready":
             raise ValueError("offline preparation cannot claim an agent decision")
         return self
 
@@ -113,7 +115,7 @@ def prepare_condition(
             return ExperimentSelection(
                 **base, status="infeasible", reason_codes=["NO_FEASIBLE_SUBSET"]
             )
-        if condition == ExperimentCondition.AGENT:
+        if condition in {ExperimentCondition.AGENT, ExperimentCondition.AGENT_ITERATIVE}:
             return ExperimentSelection(
                 **base, status="pending_agent", reason_codes=["AGENT_NOT_CONNECTED"]
             )
@@ -189,6 +191,7 @@ class PreparationRun(StrictModel):
     """Versioned offline run; no generated answers or model results implied."""
 
     protocol_version: Literal["richness-ap-dual-model-2.0"] = "richness-ap-dual-model-2.0"
+    experimental_extension: Literal["bounded-evidence-agent-1.0"] | None = None
     split: Literal["development", "held_out"]
     split_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     protocol_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
@@ -203,6 +206,16 @@ class PreparationRun(StrictModel):
     llm_called: Literal[False] = False
     answers_generated: Literal[0] = 0
     records: list[ExperimentRecord] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_extension(self) -> Self:
+        """Keep iterative preparations distinct from the historical base protocol."""
+        has_iterative = any(
+            r.selection.condition == ExperimentCondition.AGENT_ITERATIVE for r in self.records
+        )
+        if has_iterative != (self.experimental_extension is not None):
+            raise ValueError("iterative records require the matching experimental extension")
+        return self
 
 
 def scenario_seed(master_seed: int, scenario_id: str, budget: float, draw: int) -> int:
@@ -227,6 +240,11 @@ def main() -> None:
     parser.add_argument("--budget", type=float, choices=[3, 4], default=4)
     parser.add_argument("--maximum-modalities", type=int, default=2)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--include-iterative",
+        action="store_true",
+        help="Add pending AGENT_ITERATIVE records; AGENT retains one-shot semantics.",
+    )
     args = parser.parse_args()
     from autonomous_modality.protocol import ExperimentProtocol
 
@@ -277,6 +295,7 @@ def main() -> None:
                 (model_id, condition, draw)
                 for model_id in protocol.models
                 for condition in ExperimentCondition
+                if args.include_iterative or condition != ExperimentCondition.AGENT_ITERATIVE
                 for draw in range(
                     protocol.random_draws if condition == ExperimentCondition.RANDOM else 1
                 )
@@ -320,6 +339,7 @@ def main() -> None:
                 )
     output.mkdir(parents=True)
     payload = PreparationRun(
+        experimental_extension="bounded-evidence-agent-1.0" if args.include_iterative else None,
         split=args.split,
         split_sha256=sha256_file(args.split_file) if args.split_file else None,
         protocol_sha256=sha256_file(args.protocol),

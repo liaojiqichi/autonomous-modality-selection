@@ -70,3 +70,8 @@ hash checks or change a review's hash to pretend an old review covered new files
 No model inference is implemented by these commands. Agent conditions remain
 pending until the Qwen adapter and answer runner are added. Save experiment
 results separately from Git; do not commit acquired or derived scientific files.
+
+For an already loaded model and existing evidence-view packages, the new opt-in
+[iterative agent bridge](iterative_agent.md#colab-integration-existing-loaded-model)
+connects to the notebook's existing `generate_reply` and statistics log. It does not
+load a model or change the original one-shot selection function.

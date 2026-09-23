@@ -119,6 +119,43 @@ def test_build_and_isolation(source: Path, tmp_path: Path) -> None:
         load_package(moved)
 
 
+def test_iterative_real_loader_contract(source: Path, tmp_path: Path) -> None:
+    """Exercise real file loading with synthetic fixtures, not real planetary data."""
+    from autonomous_modality.iterative_evidence import evidence_view_loader
+    from autonomous_modality.models import InputDataModality as M
+
+    out = tmp_path / "views"
+    build_package(source, out, Settings(pixels=480))
+    before = {p: sha256_file(p) for p in out.rglob("*") if p.is_file()}
+    loader = evidence_view_loader(out, expected_case_id=1)
+    for modality in [M.CRATER_CATALOG, M.OPTICAL_IMAGE, M.TOPOGRAPHY]:
+        observation = loader(modality)
+        expected = build_content(out, "fixture", [modality.value])[1:]
+        assert [b.model_dump(exclude_none=True) for b in observation.blocks] == expected
+        assert observation.package_sha256 == sha256_file(out / "manifest.json")
+    assert before == {p: sha256_file(p) for p in before}
+    with pytest.raises(ValueError, match="different crater"):
+        evidence_view_loader(out, expected_case_id=999)
+    with pytest.raises(ValueError, match="not present"):
+        loader(M.SCIENTIFIC_LITERATURE)
+    (out / "terrain.txt").write_text("tampered", encoding="utf-8")
+    with pytest.raises(ValueError, match="checksum"):
+        loader(M.TOPOGRAPHY)
+
+
+def test_iterative_manifest_is_pinned(source: Path, tmp_path: Path) -> None:
+    from autonomous_modality.iterative_evidence import evidence_view_loader
+    from autonomous_modality.models import InputDataModality as M
+
+    out = tmp_path / "views"
+    build_package(source, out, Settings(pixels=480))
+    loader = evidence_view_loader(out, expected_case_id=1)
+    manifest = out / "manifest.json"
+    manifest.write_text(manifest.read_text(encoding="utf-8") + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="manifest changed"):
+        loader(M.CRATER_CATALOG)
+
+
 def test_existing_output_and_bad_source(source: Path, tmp_path: Path) -> None:
     """Refuse overwrite and reject corrupted source before creating output."""
     with pytest.raises(ValueError, match="new directory"):

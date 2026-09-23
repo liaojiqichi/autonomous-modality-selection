@@ -47,3 +47,9 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.ruff.lint.per-file-ignores]
+# Chinese notebook instructions intentionally use full-width punctuation.
+"notebooks/*.ipynb" = ["RUF001", "RUF002", "RUF003", "E402"]
+# Migration anchors preserve the exact original notebook text, including long lines.
+"examples/upgrade_colab_notebook.py" = ["RUF001", "E501"]
