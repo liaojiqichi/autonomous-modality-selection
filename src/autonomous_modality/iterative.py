@@ -43,7 +43,7 @@ Return exactly one JSON object, without markdown or additional prose:
 {"action":"REQUEST_MODALITY","modality":"TOPOGRAPHY",
  "reason":"brief evidence need and intended use"}
 or {"action":"FINISH","reason":"why further acquisition is unnecessary"}.
-Use only these fields. Keep reason to one short sentence of at most 360 characters.
+Use only these fields. Keep reason to one short sentence of at most 200 characters.
 Describe planned analyses as proposed; claim execution only for supplied results.
 Write all free-text fields entirely in English.
 """
@@ -88,7 +88,7 @@ class CompactAgentAction(StrictModel):
 
     action: Literal["REQUEST_MODALITY", "FINISH"]
     modality: InputDataModality | None = None
-    reason: Annotated[str, Field(strict=True, min_length=1, max_length=360, pattern=r".*\S.*")]
+    reason: Annotated[str, Field(strict=True, min_length=1, max_length=400, pattern=r".*\S.*")]
 
     @model_validator(mode="after")
     def validate_action(self) -> Self:
