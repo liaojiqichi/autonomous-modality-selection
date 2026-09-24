@@ -88,6 +88,26 @@ class SpatialCoverage(StrictModel):
         return self
 
 
+class AssetContentInventory(StrictModel):
+    """Versioned field names and representations, without case-specific values."""
+
+    version: NonEmptyString
+    available_fields: list[NonEmptyString] = Field(min_length=1)
+    absent_fields: list[NonEmptyString] = Field(default_factory=list)
+    model_inputs: list[NonEmptyString] = Field(min_length=1)
+    access_limits: list[NonEmptyString] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def validate_fields(self) -> Self:
+        """Reject duplicate or contradictory field declarations."""
+        for values in (self.available_fields, self.absent_fields):
+            if len(values) != len(set(values)):
+                raise ValueError("inventory fields must be unique")
+        if set(self.available_fields) & set(self.absent_fields):
+            raise ValueError("inventory field cannot be both available and absent")
+        return self
+
+
 class DataAssetProfile(StrictModel):
     """Metadata describing one available source of scientific evidence."""
 
@@ -106,6 +126,7 @@ class DataAssetProfile(StrictModel):
     limitations: list[NonEmptyString] = Field(default_factory=list)
     estimated_cost: NonNegativeFloat = 1.0
     quality_score: UnitScore | None = None
+    content_inventory: AssetContentInventory | None = None
 
 
 class CraterReference(StrictModel):

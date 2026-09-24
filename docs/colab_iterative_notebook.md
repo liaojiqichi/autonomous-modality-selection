@@ -15,7 +15,7 @@ are stored in Git. The new notebook does not run acquisition or repeat the pilot
    This notebook retains the working Qwen3-VL-8B 4-bit setup. It does not validate
    a new Gemma loading configuration.
 3. In section 3, check CASE_DIR and RESULTS_ROOT. The defaults match the uploaded
-   notebook: `/content/mercury-pilot-001/crater-16604`, with run `emin-agentic-en-001`.
+   notebook: `/content/mercury-pilot-001/crater-16604`, with run `emin-agentic-en-002`.
    Use a new RUN_LABEL when changing configuration. Persist results to your own
    Drive location if desired; no Drive mount is performed automatically.
 4. Run sections 3 through 7 in order. Source TIFFs are checked and read only.
@@ -36,7 +36,7 @@ receipt-verified input content after its first acquisition. Its final answer goe
 through the exact same `answer_question` function as every other condition. Selector
 rationales are logged separately and never appended to the answer prompt.
 
-The output schema is `colab-ap-agentic-development-en-4`. Iterative records add an
+The output schema is `colab-ap-agentic-development-en-5`. Iterative records add an
 `iterative_selection` trace; all records retain the familiar `answer`, `selected`,
 `selection_generations` and `answer_generations` fields. A failed acquisition prevents
 answer generation and retains previously accessed data and cost. Hash checks guard
@@ -59,8 +59,17 @@ policy requests approximately 200-300 words, uniformly across conditions; this i
 a new language/length protocol, not an exact equivalent of the old Chinese
 character limit. CONFIG records `language=en` and `language_protocol=english-ap-1.0`.
 Question configurations carry an `-en.1` suffix and the iterative prompt version is
-`bounded-evidence-selector-ap-1.1-en`. Start a fresh run, rerun the preflight,
+`bounded-evidence-selector-ap-1.2-compact`. Start a fresh run, rerun the preflight,
 and retain earlier results separately. No scientific data need to be downloaded again.
+
+Both selectors receive the same versioned field inventory before acquisition,
+including absent depth/age fields and representation limits. Iterative actions
+now require only action, modality (for acquisition) and a reason of at most 240
+characters. The shared answer policy is `english-ap-concise-1.0`; it asks the model
+to merge overlaps, state each idea once and stop when finished, without a fixed
+idea count. The 1024-token cap and greedy decoding are unchanged. The summary
+prints lexical word/repetition diagnostics without modifying answers or A/P scores.
+See `development_refinement_20260924.md` before comparing new and historical runs.
 
 ## Local verification
 

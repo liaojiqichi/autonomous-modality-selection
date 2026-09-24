@@ -11,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from autonomous_modality.benchmark import QuestionSet, ReviewSet
+from autonomous_modality.development_inputs import ANSWER_POLICY
 from autonomous_modality.iterative import PROMPT_VERSION, SELECTOR_INSTRUCTIONS
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,12 +84,13 @@ def test_language_policy_is_explicit_and_versioned() -> None:
         )
     )
     source = "\n".join("".join(c["source"]) for c in notebook["cells"])
-    assert "Write entirely in English, aiming for 200-300 words" in source
+    assert "Write entirely in English, aiming for 200-300 words" in ANSWER_POLICY
+    assert "ANSWER_POLICY_VERSION" in source
     assert "Write the rationale entirely in English." in source
     assert '"language": "en"' in source
     assert '"language_protocol": "english-ap-1.0"' in source
-    assert "colab-ap-agentic-development-en-4" in source
-    assert PROMPT_VERSION == "bounded-evidence-selector-ap-1.1-en"
+    assert "colab-ap-agentic-development-en-5" in source
+    assert PROMPT_VERSION == "bounded-evidence-selector-ap-1.2-compact"
     assert "Write all free-text fields entirely in English." in SELECTOR_INSTRUCTIONS
     assert "Answer in Chinese" not in source
 

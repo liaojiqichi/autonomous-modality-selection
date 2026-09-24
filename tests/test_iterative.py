@@ -7,8 +7,10 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from autonomous_modality.development_inputs import development_inventory
 from autonomous_modality.iterative import (
     AgentAction,
+    CompactAgentAction,
     ContentBlock,
     EvidenceObservation,
     GenerationReply,
@@ -78,8 +80,6 @@ def acquire(modality: str) -> str:
         dict(
             action="REQUEST_MODALITY",
             modality=modality,
-            information_gap="fixture gap",
-            intended_use="fixture proposed test",
             reason="SECRET_SELECTOR_REASON",
         )
     )
@@ -141,12 +141,79 @@ def test_observe_then_acquire_and_answer(request_data: InputSelectionRequest) ->
     assert "CRATER_CATALOG" not in prompt and "SECRET_SELECTOR_REASON" not in prompt
     assert "AGENT_ITERATIVE" not in prompt and "inventory" not in prompt
     assert IterativeSelection.model_validate_json(result.model_dump_json()) == result
+    assert IterativeSelection.model_validate(json.loads(result.model_dump_json())) == result
 
 
 def test_stop_after_observation(request_data: InputSelectionRequest) -> None:
     result = run(request_data, ScriptedGenerator([acquire("CRATER_CATALOG"), STOP]))
     assert result.stop_actor == "agent" and result.stop_reason == "AGENT_FINISH"
     assert result.cumulative_cost == 1 and len(result.turns) == 2
+    assert IterativeSelection.model_validate_json(result.model_dump_json()) == result
+
+
+@pytest.mark.parametrize("reason", [" ", "x" * 241, 17, None])
+def test_compact_reason_is_bounded(reason: object) -> None:
+    with pytest.raises(ValidationError):
+        CompactAgentAction.model_validate_json(json.dumps({"action": "FINISH", "reason": reason}))
+
+
+def test_current_parser_rejects_legacy_fields_without_retry(
+    request_data: InputSelectionRequest,
+) -> None:
+    payload = json.loads(acquire("TOPOGRAPHY"))
+    payload.update(information_gap="legacy gap", intended_use="legacy use")
+    generator = ScriptedGenerator([json.dumps(payload), STOP])
+    result = run(request_data, generator)
+    assert result.stop_reason == "INVALID_ACTION_JSON"
+    assert result.cumulative_cost == 0 and len(generator.messages) == 1
+    assert result.turns[0].generation.text == json.dumps(payload)
+
+
+def test_malformed_revision_is_preserved_without_repair(
+    request_data: InputSelectionRequest,
+) -> None:
+    malformed = '{"action":"REQUEST_MODALITY","modality":"OPTICAL_IMAGE","reason":"gap,""use":"x"}'
+    generator = ScriptedGenerator([acquire("TOPOGRAPHY"), malformed, STOP])
+    result = run(request_data, generator)
+    assert result.stop_reason == "INVALID_ACTION_JSON" and result.status == "error"
+    assert result.accessed_modalities == [M.TOPOGRAPHY] and result.cumulative_cost == 2
+    assert len(generator.messages) == 2
+    assert result.turns[-1].generation.text == malformed
+    assert result.turns[-1].action is None
+
+
+def test_legacy_trace_is_readable_without_rewriting(request_data: InputSelectionRequest) -> None:
+    result = run(request_data, ScriptedGenerator([acquire("TOPOGRAPHY"), STOP]))
+    payload = result.model_dump(mode="json")
+    payload["schema_version"] = "iterative-selection-1.0"
+    payload["prompt_version"] = "bounded-evidence-selector-ap-1.1-en"
+    action = payload["turns"][0]["action"]
+    action.update(information_gap="legacy gap", intended_use="legacy use")
+    payload["turns"][1]["action"].update(information_gap=None, intended_use=None)
+    payload["turns"][0]["generation"]["text"] = json.dumps(action)
+    serialized = json.dumps(payload)
+    historical = IterativeSelection.model_validate_json(serialized)
+    assert isinstance(historical.turns[0].action, AgentAction)
+    assert historical.schema_version == "iterative-selection-1.0"
+    assert historical.turns[0].action.information_gap == "legacy gap"
+    assert IterativeSelection.model_validate_json(historical.model_dump_json()) == historical
+    payload["schema_version"] = "iterative-selection-1.1"
+    with pytest.raises(ValidationError, match="versions differ"):
+        IterativeSelection.model_validate_json(json.dumps(payload))
+
+
+def test_inventory_precedes_acquisition_without_values(request_data: InputSelectionRequest) -> None:
+    for asset in request_data.assets:
+        asset.content_inventory = development_inventory(asset.modality)
+    generator = ScriptedGenerator([STOP])
+    result = run(request_data, generator)
+    assert result.stop_actor == "agent" and result.cumulative_cost == 0
+    message = json.loads(generator.messages[0][1]["content"][0]["text"])
+    catalogue = next(a for a in message["inventory"] if a["modality"] == "CRATER_CATALOG")
+    assert "crater_depth" in catalogue["content_inventory"]["absent_fields"]
+    assert "absolute_age" in catalogue["content_inventory"]["absent_fields"]
+    assert "diameter" in catalogue["content_inventory"]["available_fields"]
+    assert "FIXTURE_DATA" not in json.dumps(generator.messages)
 
 
 @pytest.mark.parametrize("needs_terrain,expected_count", [(True, 2), (False, 1)])
@@ -335,6 +402,8 @@ def test_load_failure_is_not_refunded(request_data: InputSelectionRequest) -> No
 def test_invalid_action(change: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         AgentAction.model_validate(change)
+    with pytest.raises(ValidationError):
+        CompactAgentAction.model_validate(change)
 
 
 @pytest.mark.parametrize(

@@ -16,7 +16,9 @@ from typing import Any, Literal
 import pytest
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from autonomous_modality.development_inputs import ANSWER_POLICY, development_inventory
 from autonomous_modality.experiments import scenario_seed
+from autonomous_modality.models import InputDataModality
 from autonomous_modality.pilot import CatalogueRow
 
 NOTEBOOK = Path("notebooks/autonomous_modality_selection_iterative.ipynb")
@@ -61,7 +63,65 @@ def test_notebook_is_clean_and_compiles() -> None:
             assert "autonomous_modality.pilot --" not in source
     assert "use_model_defaults=False" in cell_with("def generate_reply")
     assert "do_sample=False" in cell_with("def generate_reply")
-    assert 'RUN_LABEL = "emin-agentic-en-001"' in cell_with("class ViewReceipt")
+    assert 'RUN_LABEL = "emin-agentic-en-002"' in cell_with("class ViewReceipt")
+
+
+def test_notebook_configuration_initialization_order() -> None:
+    """Execute the actual metadata setup without filesystem, data or GPU operations."""
+    source = cell_with("class ViewReceipt")
+    tree = ast.parse(source)
+    selected_nodes = [
+        node
+        for node in tree.body
+        if (
+            isinstance(node, ast.ImportFrom)
+            and node.module == "autonomous_modality.development_inputs"
+        )
+        or (
+            isinstance(node, ast.Assign)
+            and any(
+                isinstance(t, ast.Name)
+                and t.id
+                in {"ASSETS", "SELECTOR_TASK", "ANSWER_TOKENS", "RUN_LABEL", "RECORD_VERSION"}
+                for t in node.targets
+            )
+        )
+        or (
+            isinstance(node, ast.For)
+            and isinstance(node.target, ast.Tuple)
+            and [getattr(t, "id", "") for t in node.target.elts] == ["name", "asset"]
+        )
+    ]
+    ns = {"InputDataModality": InputDataModality}
+    execute_nodes(source, ns, selected_nodes)
+    assert ns["ANSWER_POLICY"] == ANSWER_POLICY
+    assert ns["ANSWER_TOKENS"] == 1024
+    assert ns["RECORD_VERSION"] == "colab-ap-agentic-development-en-5"
+    for name, asset in ns["ASSETS"].items():
+        assert asset["content_inventory"] == development_inventory(
+            InputDataModality(name)
+        ).model_dump(mode="json")
+    setup_import = source.index("from autonomous_modality.development_inputs")
+    assert setup_import > source.index('sys.path.insert(0, str(PROJECT / "src"))')
+
+
+def test_both_selectors_receive_the_same_inventory(notebook_runtime: dict[str, Any]) -> None:
+    ns = notebook_runtime
+    question = ns["QUESTIONS"][0]["text"]
+    ns["select_inputs"]("AGENT", question, "Q1")
+    one_shot = json.loads(ns["GENERATION_LOG"][-1]["messages"][0]["content"][0]["text"])
+    start = len(ns["GENERATION_LOG"])
+    selection = ns["select_inputs_iterative"](question, "Q1")
+    first = ns["GENERATION_LOG"][start]["messages"][1]["content"][0]["text"]
+    iterative = json.loads(first)
+    for asset in iterative["inventory"]:
+        assert (
+            asset["content_inventory"]
+            == one_shot["modality_descriptions"][asset["modality"]]["content_inventory"]
+        )
+    assert selection.status == "ready"
+    content = json.dumps(ns["build_answer_messages"](question, [], []))
+    assert "content_inventory" not in content
 
 
 @pytest.fixture
@@ -116,7 +176,13 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
         scenario_seed=scenario_seed,
         sha256=sha256,
         ASSETS={
-            m: dict(cost=c, description="Explicit test fixture")
+            m: dict(
+                cost=c,
+                description="Explicit test fixture",
+                content_inventory=development_inventory(InputDataModality(m)).model_dump(
+                    mode="json"
+                ),
+            )
             for m, c in [("CRATER_CATALOG", 1), ("OPTICAL_IMAGE", 2), ("TOPOGRAPHY", 2)]
         },
         MAX_MODALITIES=2,
@@ -131,7 +197,7 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
         CASE_NAME=catalogue.name,
         MODEL_NAME="scripted-fixture",
         SELECTOR_TASK="fixture selection",
-        ANSWER_POLICY="FIXTURE_SHARED_ANSWER_POLICY",
+        ANSWER_POLICY=ANSWER_POLICY,
         PREVIEWS=previews,
         TERRAIN_TEXT="SYNTHETIC_TERRAIN_ONLY",
         CATALOGUE_TEXT=json.dumps(catalogue.model_dump(), ensure_ascii=False),
@@ -172,8 +238,6 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
                         dict(
                             action="REQUEST_MODALITY",
                             modality="TOPOGRAPHY",
-                            information_gap="fixture second gap",
-                            intended_use="fixture second use",
                             reason="fixture second acquisition",
                         )
                     )
@@ -184,8 +248,6 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
                     dict(
                         action="REQUEST_MODALITY",
                         modality="OPTICAL_IMAGE",
-                        information_gap="fixture gap",
-                        intended_use="fixture use",
                         reason="FIXTURE_SELECTOR_SECRET",
                     )
                 )

@@ -13,10 +13,15 @@ generation interface, and runs 36 development attempts per crater/model. See the
 
 Maintained code, documentation and experiment prompts use English. The Colab
 template requests English answers of approximately 200-300 words and starts with
-`RUN_LABEL = "emin-agentic-en-001"`. Use a fresh label when changing the protocol.
+`RUN_LABEL = "emin-agentic-en-002"`. Use a fresh label when changing the protocol.
 English question versions end in `-en.1`; older versions remain readable.
 Historical result payloads and original scientific data retain their original bytes.
 Do not pool earlier Chinese answers with the new English-language experiment.
+
+The current development revision adds explicit asset field inventories, compact
+iterative actions and a shared concise-answer policy. See the
+[development rerun instructions](docs/development_refinement_20260924.md).
+Local tests use scripted replies; model effectiveness still requires a fresh Colab run.
 
 Active design: [experiment protocol](docs/primary_experiments.md).
 Research summary: [proposal alignment](docs/research_proposal.md).
