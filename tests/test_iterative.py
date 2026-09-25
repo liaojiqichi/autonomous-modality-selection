@@ -151,7 +151,7 @@ def test_stop_after_observation(request_data: InputSelectionRequest) -> None:
     assert IterativeSelection.model_validate_json(result.model_dump_json()) == result
 
 
-@pytest.mark.parametrize("reason", [" ", "x" * 241, 17, None])
+@pytest.mark.parametrize("reason", [" ", "x" * 401, 17, None])
 def test_compact_reason_is_bounded(reason: object) -> None:
     with pytest.raises(ValidationError):
         CompactAgentAction.model_validate_json(json.dumps({"action": "FINISH", "reason": reason}))
