@@ -27,6 +27,10 @@ Active design: [experiment protocol](docs/primary_experiments.md).
 Research summary: [proposal alignment](docs/research_proposal.md).
 Annotation: [A/P rubric](docs/richness_annotation.md).
 
+Development diagnostics: [P-boundary clarification](docs/p_boundary_review_20261001.md)
+and [exhaustive input-combination sweep](docs/development_sweep.md). The sweep reuses
+existing Colab model/data interfaces and stores a separate, pinned result matrix.
+
 The experiment tests whether input selection improves two separately reported outcomes:
 analytical approaches (A) and explanatory perspectives (P). There is no C score,
 cross-modal weighting or composite richness score. Scientific validity and evidence

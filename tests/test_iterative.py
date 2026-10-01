@@ -21,6 +21,7 @@ from autonomous_modality.iterative import (
     run_iterative_answer,
     run_iterative_selection,
     save_iterative_answer,
+    selector_messages,
 )
 from autonomous_modality.iterative_colab import notebook_generator
 from autonomous_modality.models import (
@@ -56,6 +57,34 @@ def request_data() -> InputSelectionRequest:
 
 
 POLICY = IterativePolicy(cost_unit="legacy_ordinal_units", cost_definition="Test costs 1/2/2.")
+
+
+def test_alignment_and_requirements(request_data: InputSelectionRequest) -> None:
+    request_data.question.answer_requirements = ["Compare alternative causes"]
+    messages = selector_messages(request_data, POLICY, [])
+    payload = json.loads(messages[1]["content"][0]["text"])
+    assert payload["answer_requirements"] == ["Compare alternative causes"]
+    assert payload["alignment_version"] == "selector-ap-alignment-1.0"
+    instructions = messages[0]["content"][0]["text"]
+    assert "classification labels alone do not contribute P" in instructions
+    assert "without a fixed idea quota or an A+P objective" in instructions
+    assert "additional support for an existing direction" in instructions
+
+
+@pytest.mark.parametrize("requirements", [[" "], [17], "Compare causes"])
+def test_invalid_answer_requirements(
+    request_data: InputSelectionRequest, requirements: object
+) -> None:
+    data = request_data.question.model_dump()
+    data["answer_requirements"] = requirements
+    with pytest.raises(ValidationError):
+        CraterQuestion.model_validate(data)
+
+
+def test_legacy_question_defaults(request_data: InputSelectionRequest) -> None:
+    data = request_data.question.model_dump()
+    data.pop("answer_requirements")
+    assert CraterQuestion.model_validate(data).answer_requirements == []
 
 
 def test_notebook_bridge() -> None:
@@ -151,10 +180,18 @@ def test_stop_after_observation(request_data: InputSelectionRequest) -> None:
     assert IterativeSelection.model_validate_json(result.model_dump_json()) == result
 
 
-@pytest.mark.parametrize("reason", [" ", "x" * 241, 17, None])
+@pytest.mark.parametrize("reason", [" ", "x" * 401, 17, None])
 def test_compact_reason_is_bounded(reason: object) -> None:
     with pytest.raises(ValidationError):
         CompactAgentAction.model_validate_json(json.dumps({"action": "FINISH", "reason": reason}))
+
+
+@pytest.mark.parametrize("length", [240, 321, 400])
+def test_compact_reason_accepts_expanded_limit(length: int) -> None:
+    action = CompactAgentAction.model_validate_json(
+        json.dumps({"action": "REQUEST_MODALITY", "modality": "TOPOGRAPHY", "reason": "x" * length})
+    )
+    assert len(action.reason) == length
 
 
 def test_current_parser_rejects_legacy_fields_without_retry(

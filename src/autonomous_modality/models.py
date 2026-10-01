@@ -151,6 +151,7 @@ class CraterQuestion(StrictModel):
     crater: CraterReference | None = None
     target_body: NonEmptyString = "Mercury"
     target_aspects: list[NonEmptyString] = Field(default_factory=list)
+    answer_requirements: list[NonEmptyString] = Field(default_factory=list)
 
 
 class InputSelectionConstraints(StrictModel):

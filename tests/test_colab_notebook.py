@@ -114,6 +114,10 @@ def test_both_selectors_receive_the_same_inventory(notebook_runtime: dict[str, A
     selection = ns["select_inputs_iterative"](question, "Q1")
     first = ns["GENERATION_LOG"][start]["messages"][1]["content"][0]["text"]
     iterative = json.loads(first)
+    expected_requirements = ns["QUESTIONS"][0]["answer_requirements"]
+    assert one_shot["answer_requirements"] == expected_requirements
+    assert iterative["answer_requirements"] == expected_requirements
+    assert one_shot["alignment_version"] == iterative["alignment_version"]
     for asset in iterative["inventory"]:
         assert (
             asset["content_inventory"]
@@ -197,6 +201,7 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
         CASE_NAME=catalogue.name,
         MODEL_NAME="scripted-fixture",
         SELECTOR_TASK="fixture selection",
+        SELECTOR_ALIGNMENT_VERSION="selector-ap-alignment-1.0",
         ANSWER_POLICY=ANSWER_POLICY,
         PREVIEWS=previews,
         TERRAIN_TEXT="SYNTHETIC_TERRAIN_ONLY",

@@ -1,5 +1,10 @@
 # Development revision: inventory, compact actions and concise answers
 
+Follow-up: prompt version `bounded-evidence-selector-ap-1.3-compact` increases only
+the reason limit from 240 to 400 characters. The original settings below describe
+the first compact-action run. Keep those results unchanged and use a fresh run
+label (for example, `emin-agentic-en-003`) for the expanded limit.
+
 This revision responds to the inspected Eminescu development run, which contained
 36 attempts: 31 successful, four truncated and one invalid selector JSON response.
 Those results remain unchanged. This document specifies the next development run;

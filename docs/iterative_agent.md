@@ -26,7 +26,7 @@ use should be finalized after development testing. Historical results remain sep
 
 1. The selector initially receives the question, inventory metadata and constraints.
 2. REQUEST_MODALITY names one scientific modality and gives a short reason combining
-   the evidence need and intended use (at most 240 characters). Deterministic code
+   the evidence need and intended use (at most 400 characters). Deterministic code
    validates the compact response; FINISH uses only action and reason.
 3. The system reads the existing verified package and returns its actual text/images.
 4. After the first acquisition, the agent can FINISH or request one other modality.
@@ -39,7 +39,7 @@ modalities must remain attainable after each acquisition. Forbidden, unavailable
 unknown, duplicate and over-budget requests are rejected. There are no silent
 repairs, fallbacks or retries; raw invalid output stays in the error trace.
 
-The current action prompt is `bounded-evidence-selector-ap-1.2-compact`, with trace
+The current action prompt is `bounded-evidence-selector-ap-1.4-aligned`, with trace
 schema `iterative-selection-1.1`. The legacy `AgentAction` and trace schema 1.0 remain
 readable for archival analysis; new model calls are parsed as `CompactAgentAction`.
 Legacy information_gap/intended_use response fields are rejected by the new parser.

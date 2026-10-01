@@ -7,6 +7,24 @@ These declarations describe model-visible representations, not new scientific da
 from autonomous_modality.models import AssetContentInventory, InputDataModality
 
 INVENTORY_VERSION = "mercury-development-contents-1.0"
+SELECTOR_ALIGNMENT_VERSION = "selector-ap-alignment-1.0"
+SELECTOR_ALIGNMENT = (
+    "A means distinct, relevant analytical paths or tests. Concrete executable proposals "
+    "can contribute A even when they require future data or tools and remain unperformed. "
+    "P means mechanisms or alternative explanations linked to a specific feature, pattern "
+    "or discrepancy, including relevant methodological causes. Modality names and "
+    "classification labels alone do not contribute P. Merge paraphrases, routine steps "
+    "and overlapping explanations. Compare feasible choices by the additional analytical "
+    "paths and explanatory alternatives they could enable relative to other choices. "
+    "After observing evidence, distinguish complementary new A/P contributions from "
+    "additional support for an existing direction; both can be useful. Consider the "
+    "question and answer requirements together. Keep A and P separate, without a fixed "
+    "idea quota or an A+P objective. Use only declared asset capabilities; unknown fields "
+    "remain unknown. Distinguish future evidence needs from evidence already supplied. "
+    "Scientific validity and evidence fidelity remain separate quality checks; preserve "
+    "both while considering richness. Explain the main contribution or tradeoff briefly "
+    "within the existing response format."
+)
 ANSWER_POLICY_VERSION = "english-ap-concise-1.0"
 ANSWER_POLICY = (
     "Assist an exploratory study of a Mercury crater. "

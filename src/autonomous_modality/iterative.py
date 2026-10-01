@@ -15,6 +15,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import ConfigDict, Field, model_validator
 
+from autonomous_modality.development_inputs import SELECTOR_ALIGNMENT, SELECTOR_ALIGNMENT_VERSION
 from autonomous_modality.models import (
     AssetAvailability,
     InputDataModality,
@@ -24,8 +25,9 @@ from autonomous_modality.models import (
 )
 
 PROTOCOL_VERSION = "bounded-evidence-agent-1.0"
-PROMPT_VERSION = "bounded-evidence-selector-ap-1.2-compact"
-SELECTOR_INSTRUCTIONS = """Select scientific evidence for the given research question.
+PROMPT_VERSION = "bounded-evidence-selector-ap-1.4-aligned"
+SELECTOR_INSTRUCTIONS = (
+    """Select scientific evidence for the given research question.
 The outcomes are distinct executable analytical approaches (A) and explanatory
 perspectives (P). Scientific validity and evidence fidelity are separate checks.
 First use the inventory metadata. After acquiring evidence, inspect its actual
@@ -43,10 +45,13 @@ Return exactly one JSON object, without markdown or additional prose:
 {"action":"REQUEST_MODALITY","modality":"TOPOGRAPHY",
  "reason":"brief evidence need and intended use"}
 or {"action":"FINISH","reason":"why further acquisition is unnecessary"}.
-Use only these fields. Keep reason to one short sentence of at most 240 characters.
+Use only these fields. Keep reason to one short sentence of at most 400 characters.
 Describe planned analyses as proposed; claim execution only for supplied results.
 Write all free-text fields entirely in English.
 """
+    + "\n"
+    + SELECTOR_ALIGNMENT
+)
 
 Count = Annotated[int, Field(ge=0, strict=True)]
 Digest = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
@@ -88,7 +93,7 @@ class CompactAgentAction(StrictModel):
 
     action: Literal["REQUEST_MODALITY", "FINISH"]
     modality: InputDataModality | None = None
-    reason: Annotated[str, Field(strict=True, min_length=1, max_length=240, pattern=r".*\S.*")]
+    reason: Annotated[str, Field(strict=True, min_length=1, max_length=400, pattern=r".*\S.*")]
 
     @model_validator(mode="after")
     def validate_action(self) -> Self:
@@ -170,6 +175,8 @@ class IterativeSelection(StrictModel):
         "bounded-evidence-selector-ap-1.0",
         "bounded-evidence-selector-ap-1.1-en",
         "bounded-evidence-selector-ap-1.2-compact",
+        "bounded-evidence-selector-ap-1.3-compact",
+        "bounded-evidence-selector-ap-1.4-aligned",
     ] = PROMPT_VERSION
     prompt_sha256: Digest
     implementation_sha256: Digest
@@ -185,7 +192,12 @@ class IterativeSelection(StrictModel):
     def validate_trace(self) -> Self:
         """Check successful evidence coverage and cumulative accounting on reload."""
         if (self.schema_version == "iterative-selection-1.1") != (
-            self.prompt_version == "bounded-evidence-selector-ap-1.2-compact"
+            self.prompt_version
+            in {
+                "bounded-evidence-selector-ap-1.2-compact",
+                "bounded-evidence-selector-ap-1.3-compact",
+                "bounded-evidence-selector-ap-1.4-aligned",
+            }
         ):
             raise ValueError("trace schema and action prompt versions differ")
         if self.schema_version == "iterative-selection-1.1" and any(
@@ -302,6 +314,8 @@ def selector_messages(
     assets = {a.modality: a for a in request.assets}
     payload = {
         "question": request.question.text,
+        "answer_requirements": request.question.answer_requirements,
+        "alignment_version": SELECTOR_ALIGNMENT_VERSION,
         "inventory": [
             a.model_dump(mode="json", exclude={"source_uri", "quality_score"})
             for a in request.assets
