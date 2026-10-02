@@ -45,7 +45,7 @@ Return exactly one JSON object, without markdown or additional prose:
 {"action":"REQUEST_MODALITY","modality":"TOPOGRAPHY",
  "reason":"brief evidence need and intended use"}
 or {"action":"FINISH","reason":"why further acquisition is unnecessary"}.
-Use only these fields. Keep reason to one short sentence of at most 400 characters.
+Use only these fields. Keep reason to one short sentence of at most 200 characters.
 Describe planned analyses as proposed; claim execution only for supplied results.
 Write all free-text fields entirely in English.
 """
