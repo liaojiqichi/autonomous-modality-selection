@@ -90,7 +90,7 @@ def test_language_policy_is_explicit_and_versioned() -> None:
     assert '"language": "en"' in source
     assert '"language_protocol": "english-ap-1.0"' in source
     assert "colab-ap-agentic-development-en-5" in source
-    assert PROMPT_VERSION == "bounded-evidence-selector-ap-1.4-aligned"
+    assert PROMPT_VERSION == "bounded-evidence-selector-ap-1.5-input-supported"
     assert "Write all free-text fields entirely in English." in SELECTOR_INSTRUCTIONS
     assert "Answer in Chinese" not in source
 

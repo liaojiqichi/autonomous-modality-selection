@@ -201,7 +201,7 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
         CASE_NAME=catalogue.name,
         MODEL_NAME="scripted-fixture",
         SELECTOR_TASK="fixture selection",
-        SELECTOR_ALIGNMENT_VERSION="selector-ap-alignment-1.0",
+        SELECTOR_ALIGNMENT_VERSION="selector-ap-input-supported-1.0",
         ANSWER_POLICY=ANSWER_POLICY,
         PREVIEWS=previews,
         TERRAIN_TEXT="SYNTHETIC_TERRAIN_ONLY",

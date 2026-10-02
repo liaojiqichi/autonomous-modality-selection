@@ -39,7 +39,7 @@ modalities must remain attainable after each acquisition. Forbidden, unavailable
 unknown, duplicate and over-budget requests are rejected. There are no silent
 repairs, fallbacks or retries; raw invalid output stays in the error trace.
 
-The current action prompt is `bounded-evidence-selector-ap-1.4-aligned`, with trace
+The current action prompt is `bounded-evidence-selector-ap-1.5-input-supported`, with trace
 schema `iterative-selection-1.1`. The legacy `AgentAction` and trace schema 1.0 remain
 readable for archival analysis; new model calls are parsed as `CompactAgentAction`.
 Legacy information_gap/intended_use response fields are rejected by the new parser.

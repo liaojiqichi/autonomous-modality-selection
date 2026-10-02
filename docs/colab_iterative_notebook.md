@@ -59,17 +59,20 @@ policy requests approximately 200-300 words, uniformly across conditions; this i
 a new language/length protocol, not an exact equivalent of the old Chinese
 character limit. CONFIG records `language=en` and `language_protocol=english-ap-1.0`.
 Question configurations carry an `-en.1` suffix and the iterative prompt version is
-`bounded-evidence-selector-ap-1.4-aligned`. Start a fresh run, rerun the preflight,
+`bounded-evidence-selector-ap-1.5-input-supported`. Start a fresh run, rerun the preflight,
 and retain earlier results separately. No scientific data need to be downloaded again.
 
 Both selectors receive the same versioned field inventory before acquisition,
 including absent depth/age fields and representation limits. Iterative actions
-now require only action, modality (for acquisition) and a reason of at most 400
-characters. The shared answer policy is `english-ap-concise-1.0`; it asks the model
-to merge overlaps, state each idea once and stop when finished, without a fixed
-idea count. The 1024-token cap and greedy decoding are unchanged. The summary
+now require only action, modality (for acquisition) and a reason requested within
+200 characters, with a strict validation ceiling of 400 characters. The shared
+answer policy is `english-ap-input-supported-1.0`; it prioritizes current-input
+contributions and separates proposals needing additional scientific data.
+It merges overlaps without a fixed idea count. Generation settings are unchanged
+by this prompt update; preserve working Colab overrides. The summary
 prints lexical word/repetition diagnostics without modifying answers or A/P scores.
 See `development_refinement_20260924.md` before comparing new and historical runs.
+See `input_supported_prompts_20261002.md` for prompt refresh instructions.
 
 ## Local verification
 

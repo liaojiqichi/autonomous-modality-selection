@@ -64,7 +64,7 @@ def test_alignment_and_requirements(request_data: InputSelectionRequest) -> None
     messages = selector_messages(request_data, POLICY, [])
     payload = json.loads(messages[1]["content"][0]["text"])
     assert payload["answer_requirements"] == ["Compare alternative causes"]
-    assert payload["alignment_version"] == "selector-ap-alignment-1.0"
+    assert payload["alignment_version"] == "selector-ap-input-supported-1.0"
     instructions = messages[0]["content"][0]["text"]
     assert "classification labels alone do not contribute P" in instructions
     assert "without a fixed idea quota or an A+P objective" in instructions

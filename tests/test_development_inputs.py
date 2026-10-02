@@ -6,6 +6,8 @@ from pydantic import ValidationError
 from autonomous_modality.development_inputs import (
     ANSWER_POLICY,
     ANSWER_POLICY_VERSION,
+    SELECTOR_ALIGNMENT,
+    SELECTOR_ALIGNMENT_VERSION,
     development_inventory,
 )
 from autonomous_modality.models import AssetContentInventory, InputDataModality
@@ -63,9 +65,27 @@ def test_invalid_inventory(change: dict[str, object]) -> None:
 
 
 def test_concise_policy_preserves_open_ended_richness() -> None:
-    assert ANSWER_POLICY_VERSION == "english-ap-concise-1.0"
+    assert ANSWER_POLICY_VERSION == "english-ap-input-supported-1.0"
     assert "no required number of ideas" in ANSWER_POLICY
     assert "Merge overlapping ideas" in ANSWER_POLICY
     assert "end the answer immediately" in ANSWER_POLICY
     assert "proposed" in ANSWER_POLICY
     assert "200-300 words" in ANSWER_POLICY
+
+
+def test_prompts_prioritize_current_inputs_without_requiring_completed_work() -> None:
+    assert SELECTOR_ALIGNMENT_VERSION == "selector-ap-input-supported-1.0"
+    assert "later computation is allowed" in SELECTOR_ALIGNMENT
+    assert "Later computation is allowed; hypotheses need not be proven" in ANSWER_POLICY
+    assert "Additional-data proposals" in ANSWER_POLICY
+    assert "Without case evidence" in ANSWER_POLICY
+    assert "do not count as current-input contributions" in SELECTOR_ALIGNMENT
+    assert "classification labels alone do not contribute P" in SELECTOR_ALIGNMENT
+    assert "additional support for an existing direction" in SELECTOR_ALIGNMENT
+    assert "without a fixed idea quota or an A+P objective" in SELECTOR_ALIGNMENT
+
+
+@pytest.mark.parametrize("prompt", [ANSWER_POLICY, SELECTOR_ALIGNMENT])
+def test_shared_prompts_remain_concise_and_keep_quality_checks(prompt: str) -> None:
+    assert len(prompt.split()) <= 220
+    assert "scientific validity and evidence fidelity" in prompt

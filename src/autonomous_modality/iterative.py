@@ -25,7 +25,7 @@ from autonomous_modality.models import (
 )
 
 PROTOCOL_VERSION = "bounded-evidence-agent-1.0"
-PROMPT_VERSION = "bounded-evidence-selector-ap-1.4-aligned"
+PROMPT_VERSION = "bounded-evidence-selector-ap-1.5-input-supported"
 SELECTOR_INSTRUCTIONS = (
     """Select scientific evidence for the given research question.
 The outcomes are distinct executable analytical approaches (A) and explanatory
@@ -177,6 +177,7 @@ class IterativeSelection(StrictModel):
         "bounded-evidence-selector-ap-1.2-compact",
         "bounded-evidence-selector-ap-1.3-compact",
         "bounded-evidence-selector-ap-1.4-aligned",
+        "bounded-evidence-selector-ap-1.5-input-supported",
     ] = PROMPT_VERSION
     prompt_sha256: Digest
     implementation_sha256: Digest
@@ -197,6 +198,7 @@ class IterativeSelection(StrictModel):
                 "bounded-evidence-selector-ap-1.2-compact",
                 "bounded-evidence-selector-ap-1.3-compact",
                 "bounded-evidence-selector-ap-1.4-aligned",
+                "bounded-evidence-selector-ap-1.5-input-supported",
             }
         ):
             raise ValueError("trace schema and action prompt versions differ")
