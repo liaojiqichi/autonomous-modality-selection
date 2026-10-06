@@ -1,5 +1,11 @@
 # Autonomous Input Modality Selection
 
+Opt-in input adapter: [multispectral regional evidence](docs/multispectral.md).
+Real MDR v4 inputs for the seven existing accepted targets are prepared in
+experiments/benchmarks/mercury-four-modality-20261006 (local data, excluded from Git).
+Historical packages and notebook defaults remain unchanged. Use the new package
+loader explicitly for four-modality experiments; see the adapter documentation.
+
 New opt-in development experiment: [bounded iterative agent](docs/iterative_agent.md).
 `AGENT_ITERATIVE` acquires real existing evidence at most twice, with one feedback
 decision and cumulative access costs. Historical `AGENT` remains the one-shot
@@ -67,6 +73,13 @@ targets or the final six-target development split. Formal evaluation requires a
 reviewed split with 30 independent held-out craters; this gate is deliberately closed.
 
 ## Code responsibilities
+
+For the new four-modality Colab development experiment, use
+`notebooks/autonomous_modality_selection_four_modality.ipynb` and follow
+[the four-modality guide](docs/colab_four_modality.md). The notebook downloads a
+checksummed public release containing seven existing targets and their real MDIS
+multispectral packages. Large data remain outside Git. Existing three-modality
+notebooks and historical experiments are preserved.
 
 - `models.py`, `evaluation.py`: A/P annotations with spans, duplicate groups and quality.
 - `protocol.py`, `configs/experiment_protocol.json`: final-proposal design constants.

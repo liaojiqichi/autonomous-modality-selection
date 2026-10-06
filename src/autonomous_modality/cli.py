@@ -38,6 +38,14 @@ def mercury_demo_assets() -> list[DataAssetProfile]:
     )
     return [
         DataAssetProfile(
+            asset_id="multispectral-not-acquired",
+            modality=InputDataModality.MULTISPECTRAL_IMAGE,
+            title="Calibrated multispectral package (not acquired)",
+            availability=AssetAvailability.UNAVAILABLE,
+            limitations=[METADATA_ONLY_NOTICE, "No verified multispectral package is supplied."],
+            estimated_cost=2.0,
+        ),
+        DataAssetProfile(
             asset_id="mdis-loi-global-166m",
             modality=InputDataModality.OPTICAL_IMAGE,
             title="MESSENGER MDIS LOI Global Mosaic",

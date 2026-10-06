@@ -174,7 +174,7 @@ def test_cross_modal_fallback_recovers_budget_feasible_pair(
     ]
     assert result.decision.total_cost == 2.0
     assert result.rule_version == result.candidates.rule_version == RULE_VERSION
-    assert RULE_VERSION == "input-richness-baseline-1.2"
+    assert RULE_VERSION == "input-richness-baseline-1.3"
     assert "CROSS_MODAL_FEASIBILITY_FALLBACK" in result.decision.reason_codes
     assert "does not optimize solution richness" in result.decision.rationale
     assert budget_trap_request.model_dump_json() == original

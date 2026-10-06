@@ -35,7 +35,7 @@ def test_cli_emits_input_selection_json(capsys: pytest.CaptureFixture[str]) -> N
     assert exit_code == 0
     assert payload["decision"]["selected"]
     assert "expected_richness" in payload["decision"]
-    assert payload["rule_version"] == "input-richness-baseline-1.2"
+    assert payload["rule_version"] == "input-richness-baseline-1.3"
     emitted_assets = payload["candidates"]["available_assets"]
     for asset in emitted_assets:
         assert METADATA_ONLY_NOTICE in asset["limitations"]

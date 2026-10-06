@@ -20,7 +20,7 @@ from autonomous_modality.models import (
     SelectionPriority,
 )
 
-RULE_VERSION = "input-richness-baseline-1.2"
+RULE_VERSION = "input-richness-baseline-1.3"
 MODALITY_ORDER = tuple(InputDataModality)
 
 TASK_SCORES: dict[CraterQuestionType, dict[InputDataModality, float]] = {
@@ -74,6 +74,10 @@ PAIR_INSIGHTS: dict[frozenset[InputDataModality], str] = {
         "Connect visible morphology with published explanatory perspectives."
     ),
 }
+
+# Provisional neutral starting scores; no experimentally demonstrated benefit.
+for _question_scores in TASK_SCORES.values():
+    _question_scores[InputDataModality.MULTISPECTRAL_IMAGE] = 50.0
 
 
 def filter_candidates(request: InputSelectionRequest) -> CandidateFilterResult:

@@ -8,6 +8,7 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 CURRENT_SCHEMA_VERSION = "2.0"
+INPUT_MODALITY_TAXONOMY_VERSION = "scientific-input-modalities-1.1"
 NonEmptyString = Annotated[str, Field(min_length=1, pattern=r".*\S.*")]
 UnitScore = Annotated[float, Field(ge=0.0, le=1.0)]
 NonNegativeFloat = Annotated[float, Field(ge=0.0)]
@@ -21,6 +22,7 @@ class InputDataModality(StrEnum):
     TOPOGRAPHY = "TOPOGRAPHY"
     SCIENTIFIC_LITERATURE = "SCIENTIFIC_LITERATURE"
     SIMULATION_OUTPUT = "SIMULATION_OUTPUT"
+    MULTISPECTRAL_IMAGE = "MULTISPECTRAL_IMAGE"
 
 
 class CraterQuestionType(StrEnum):
