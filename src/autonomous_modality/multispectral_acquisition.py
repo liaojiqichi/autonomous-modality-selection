@@ -148,10 +148,13 @@ def parse_tile(path: Path, url: str) -> Tile:
 def intersects(bounds: list[float], tile: Tile) -> bool:
     """Test a target extent against an east-positive tile, accounting for longitude wrap."""
     west, south, east, north = bounds
+    if east < west:
+        east += 360
+    tile_east = tile.east + 360 if tile.east < tile.west else tile.east
     return (
         south < tile.north
         and north > tile.south
-        and any(west + shift < tile.east and east + shift > tile.west for shift in (-360, 0, 360))
+        and any(west + shift < tile_east and east + shift > tile.west for shift in (-360, 0, 360))
     )
 
 

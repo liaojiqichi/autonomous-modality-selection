@@ -1,5 +1,11 @@
 # Autonomous Input Modality Selection
 
+Held-out dataset: [preparation, quality review and frozen design](docs/heldout_preparation.md).
+The 30-target four-modality data/design release excludes all twelve previously inspected
+pilot targets and Caloris. Model-runtime approval remains pending; no held-out answers
+have been generated. The revised ordinal-cost protocol and A/P rubric are frozen
+separately from historical development protocols.
+
 Opt-in input adapter: [multispectral regional evidence](docs/multispectral.md).
 Real MDR v4 inputs for the seven existing accepted targets are prepared in
 experiments/benchmarks/mercury-four-modality-20261006 (local data, excluded from Git).
@@ -29,7 +35,8 @@ iterative actions and a shared concise-answer policy. See the
 [development rerun instructions](docs/development_refinement_20260924.md).
 Local tests use scripted replies; model effectiveness still requires a fresh Colab run.
 
-Active design: [experiment protocol](docs/primary_experiments.md).
+Held-out design: [current revision](docs/heldout_preparation.md).
+Historical three-modality design: [experiment protocol](docs/primary_experiments.md).
 Research summary: [proposal alignment](docs/research_proposal.md).
 Annotation: [A/P rubric](docs/richness_annotation.md).
 
