@@ -6,7 +6,7 @@ These declarations describe model-visible representations, not new scientific da
 
 from autonomous_modality.models import AssetContentInventory, InputDataModality
 
-INVENTORY_VERSION = "mercury-development-contents-1.0"
+INVENTORY_VERSION = "mercury-development-contents-1.1"
 SELECTOR_ALIGNMENT_VERSION = "selector-ap-input-supported-1.0"
 SELECTOR_ALIGNMENT = (
     "Select for the question and answer requirements. A means distinct analytical tests "
@@ -19,15 +19,17 @@ SELECTOR_ALIGNMENT = (
     "do not count as current-input contributions. Preserve scientific validity and evidence "
     "fidelity. Keep A/P separate, without a fixed idea quota or an A+P objective."
 )
-ANSWER_POLICY_VERSION = "english-ap-input-supported-1.0"
+ANSWER_POLICY_VERSION = "english-ap-input-supported-1.1"
 ANSWER_POLICY = (
     "Assist an exploratory study of a Mercury crater. "
-    "Write entirely in English, aiming for 200-300 words; no required number of ideas. "
+    "Write in English within 200-300 words, including headings. "
+    "Use concise paragraphs or bullets, with no fixed number of ideas. "
     "Prioritize distinct analytical tests feasible with supplied representations and "
     "plausible explanations anchored in supplied features or representation limitations. "
-    "Later computation is allowed; hypotheses need not be proven. For each idea, identify "
-    "its evidence basis and main limitation. Merge overlapping ideas; omit routine steps "
-    "and recaps, then end the answer immediately. "
+    "Later computation is allowed; hypotheses need not be proven. "
+    "State each idea once, with its evidence basis and essential qualification. "
+    "Combine shared qualifications. Omit an introductory summary, repeated input "
+    "descriptions and a concluding recap. End after the substantive points. " "
     "Place ideas needing extra scientific data under 'Additional-data proposals', naming "
     "the missing inputs. Without case evidence, state the limitation and keep suggestions "
     "in that section. Distinguish proposed, observed and executed work; never invent results. "
@@ -109,14 +111,17 @@ def development_inventory(modality: InputDataModality) -> AssetContentInventory:
                 "computed_slope_map",
                 "computed_registration_error",
             ],
-            model_inputs=[
-                "Elevation PNG and two fixed central profile PNGs (east-west, north-south)",
-                "Whole-crop statistics and 17 index-spaced numeric samples per profile",
+           model_inputs=[
+                "Elevation preview and two central profile plots: east-west and north-south.",
+                "Whole-crop elevation statistics and 17 index-spaced numeric samples per profile.",
             ],
             access_limits=[
-                "Elevation in metres, profile distance in km; crop range is not crater depth.",
-                "Sparse samples may omit extrema; no direct model access to full TIFF/CSV arrays.",
-                "New gradients, segmentation and registration measurements require external tools.",
+                "Elevation is in metres and profile distance is in kilometres.",
+                "Numeric samples support comparisons along the two supplied profiles.",
+                "Profile-based slope estimates require accounting for sample spacing.",
+                "Crop statistics describe the entire crop; they are not rim, floor or spectral-region statistics.",
+                "Full-grid slope maps and new regional elevation summaries require the underlying raster.",
+                "Sparse profile samples may miss local extrema.",
                 "The DEM and optical images share MDIS ancestry.",
             ],
         )
