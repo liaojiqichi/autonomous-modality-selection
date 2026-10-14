@@ -29,7 +29,7 @@ ANSWER_POLICY = (
     "Later computation is allowed; hypotheses need not be proven. "
     "State each idea once, with its evidence basis and essential qualification. "
     "Combine shared qualifications. Omit an introductory summary, repeated input "
-    "descriptions and a concluding recap. End after the substantive points. " "
+    "descriptions and a concluding recap. End after the substantive points. "
     "Place ideas needing extra scientific data under 'Additional-data proposals', naming "
     "the missing inputs. Without case evidence, state the limitation and keep suggestions "
     "in that section. Distinguish proposed, observed and executed work; never invent results. "
