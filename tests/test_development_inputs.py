@@ -65,13 +65,13 @@ def test_invalid_inventory(change: dict[str, object]) -> None:
 
 
 def test_concise_policy_preserves_open_ended_richness() -> None:
-    assert ANSWER_POLICY_VERSION == "english-ap-input-supported-1.0"
-    assert "no required number of ideas" in ANSWER_POLICY
-    assert "Merge overlapping ideas" in ANSWER_POLICY
-    assert "end the answer immediately" in ANSWER_POLICY
+    assert ANSWER_POLICY_VERSION == "english-ap-input-supported-1.1"
+    assert "no fixed number of ideas" in ANSWER_POLICY
+    assert "State each idea once" in ANSWER_POLICY
+    assert "End after the substantive points" in ANSWER_POLICY
+    assert "including headings" in ANSWER_POLICY
     assert "proposed" in ANSWER_POLICY
     assert "200-300 words" in ANSWER_POLICY
-
 
 def test_prompts_prioritize_current_inputs_without_requiring_completed_work() -> None:
     assert SELECTOR_ALIGNMENT_VERSION == "selector-ap-input-supported-1.0"
