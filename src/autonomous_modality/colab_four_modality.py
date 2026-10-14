@@ -86,7 +86,7 @@ def prepare_compact_inputs(root: Path, output: Path, edge: int) -> dict:
         raise ValueError("IMAGE_EDGE_OUT_OF_RANGE")
     manifest = FourModalityManifest.model_validate_json((root / "manifest.json").read_bytes())
     spec = {
-        "version": "four-modality-compact-1.0",
+        "version": "four-modality-compact-1.1",
         "source_sha256": manifest.files,
         "implementation_sha256": {"colab_four_modality.py": sha256_file(Path(__file__))},
         "image_edge": edge,
