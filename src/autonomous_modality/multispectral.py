@@ -32,6 +32,10 @@ LIMITATIONS = [
     "Illumination, photometric correction, resolution and registration can affect differences.",
     "Region labels describe supplied masks, not confirmed geological interpretations.",
     "MDIS multispectral and MDIS grayscale imagery share instrument ancestry.",
+    "Each region provides band-wise mean, spatial standard deviation and valid-pixel count.",
+    "These summaries support comparisons of regional mean spectra and ratios between band means.",
+    "Spatial standard deviation describes within-region variation.",
+    "Pixel-level spectra and elevation summaries for the same regions are not included.",
 ]
 
 
