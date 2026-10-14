@@ -84,7 +84,7 @@ def test_language_policy_is_explicit_and_versioned() -> None:
         )
     )
     source = "\n".join("".join(c["source"]) for c in notebook["cells"])
-    assert "Write entirely in English, aiming for 200-300 words" in ANSWER_POLICY
+    assert "Write in English within 200-300 words, including headings" in ANSWER_POLICY
     assert "ANSWER_POLICY_VERSION" in source
     assert "Write the rationale entirely in English." in source
     assert '"language": "en"' in source
