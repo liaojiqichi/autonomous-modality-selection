@@ -70,6 +70,99 @@ def test_complete_loop_and_resume(runtime: dict[str, Any]) -> None:
         assert record["input_cost"] == 7
 
 
+@pytest.mark.parametrize(
+    "wrapper", ["{}", "  {}\n", "```json\n{}\n```", "```\n{}\n```", "```json\r\n{}\r\n```"]
+)
+def test_one_shot_json_envelope(runtime: dict[str, Any], wrapper: str) -> None:
+    raw = wrapper.format(json.dumps({"option_id": "S1", "rationale": "Fixture choice."}))
+    assert runtime["parse_agent_choice"](raw).option_id == "S1"
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        'Here is JSON: {"option_id":"S1","rationale":"x"}',
+        '```json\n{"option_id":"S1","rationale":"x"}\n```\nExtra text',
+        "```json\n{}\n```\n```json\n{}\n```",
+        '```python\n{"option_id":"S1","rationale":"x"}\n```',
+        '```json\n{"option_id":"S1","rationale":"x"}',
+        '```json\n{"option_id":"S1",}\n```',
+        '```json\n{"option_id":1,"rationale":"x"}\n```',
+        '```json\n{"option_id":"S1","rationale":"x","extra":true}\n```',
+        '```json\n{"option_id":"S1"}\n```',
+        "[]",
+    ],
+)
+def test_one_shot_rejects_invalid_output(runtime: dict[str, Any], raw: str) -> None:
+    with pytest.raises(ValueError):
+        runtime["parse_agent_choice"](raw)
+
+
+@pytest.mark.parametrize(
+    "option, rationale, finish, valid",
+    [
+        ("S1", "Fixture choice.", "eos", True),
+        ("UNKNOWN", "Fixture choice.", "eos", False),
+        ("S1", "   ", "eos", False),
+        ("S1", "Fixture choice.", "length", False),
+    ],
+)
+def test_one_shot_keeps_raw_and_validation(
+    runtime: dict[str, Any], option: str, rationale: str, finish: str, valid: bool
+) -> None:
+    raw = "```json\n" + json.dumps(dict(option_id=option, rationale=rationale)) + "\n```"
+    calls = []
+
+    def generate(messages: list[dict], max_new_tokens: int) -> str:
+        calls.append(messages)
+        runtime["GENERATION_LOG"].append(dict(text=raw, finish_reason=finish))
+        return raw
+
+    runtime["generate_reply"] = generate
+    spec = runtime["QUESTIONS"][0]
+    args = ("AGENT", spec["text"], spec["question_id"])
+    if valid:
+        selected, reason = runtime["select_inputs"](*args)
+        assert selected == runtime["OPTIONS"][option]["selected"]
+        assert reason == rationale
+    else:
+        with pytest.raises(ValueError):
+            runtime["select_inputs"](*args)
+    assert len(calls) == 1
+    assert runtime["GENERATION_LOG"][-1]["text"] == raw
+
+
+def test_one_shot_parser_is_fingerprinted() -> None:
+    notebook = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
+    runner = next(
+        "".join(c["source"])
+        for c in notebook["cells"]
+        if "tracked_objects = (" in "".join(c["source"])
+    )
+    assert "    parse_agent_choice,\n" in runner
+
+
+def test_fenced_agent_complete_loop(runtime: dict[str, Any]) -> None:
+    original = runtime["generate_reply"]
+
+    def generate(
+        messages: list[dict], max_new_tokens: int = 128, repetition_penalty: float = 1.0
+    ) -> str:
+        raw = original(messages, max_new_tokens, repetition_penalty)
+        if '"feasible_options"' in messages[0]["content"][0].get("text", ""):
+            raw = "```json\n" + raw + "\n```"
+            runtime["GENERATION_LOG"][-1]["text"] = raw
+        return raw
+
+    runtime["generate_reply"] = generate
+    base.test_all_36_attempts_and_resume(runtime)
+    paths = list(runtime["OUTPUT"].glob("*__AGENT__*.json"))
+    assert len(paths) == 4
+    for path in paths:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        assert record["selection_generations"][0]["text"].startswith("```json")
+
+
 def test_routing_and_tamper(runtime: dict[str, Any]) -> None:
     build = runtime["build_answer_messages"]
     assert runtime["MS_TEXT"] not in json.dumps(build("fixture", [], []))

@@ -64,6 +64,17 @@ def test_invalid_inventory(change: dict[str, object]) -> None:
         AssetContentInventory.model_validate(payload)
 
 
+def test_terrain_limits_preserve_complete_statements() -> None:
+    limits = development_inventory(InputDataModality.TOPOGRAPHY).access_limits
+    assert (
+        "Crop statistics describe the entire crop; "
+        "they are not rim, floor or spectral-region statistics."
+    ) in limits
+    assert (
+        "Full-grid slope maps and new regional elevation summaries require the underlying raster."
+    ) in limits
+
+
 def test_concise_policy_preserves_open_ended_richness() -> None:
     assert ANSWER_POLICY_VERSION == "english-ap-input-supported-1.1"
     assert "no fixed number of ideas" in ANSWER_POLICY
@@ -72,6 +83,7 @@ def test_concise_policy_preserves_open_ended_richness() -> None:
     assert "including headings" in ANSWER_POLICY
     assert "proposed" in ANSWER_POLICY
     assert "200-300 words" in ANSWER_POLICY
+
 
 def test_prompts_prioritize_current_inputs_without_requiring_completed_work() -> None:
     assert SELECTOR_ALIGNMENT_VERSION == "selector-ap-input-supported-1.0"

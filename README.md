@@ -105,3 +105,10 @@ or pooled with new A/P results. Old three-dimensional annotation payloads are re
 Old proposal PDFs in output/ are not active protocols. Data/raw and acquired data are read-only.
 No credentials, automatic downloads, paid model calls or GitHub pushes are performed.
 The schedule is a reference, not an automated reminder.
+
+The four-modality development notebook uses `one-shot-json-envelope-v1` for
+the auxiliary one-shot AGENT: bare JSON and one complete Markdown JSON fence
+are accepted. Field, option, completion and budget validation remain strict;
+prose and multiple code blocks are rejected. Raw generation logs are preserved,
+and the parser source is included in the run fingerprint. Use a fresh run label
+after this change; historical failed attempts remain unchanged.

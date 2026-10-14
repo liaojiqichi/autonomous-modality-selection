@@ -111,7 +111,7 @@ def development_inventory(modality: InputDataModality) -> AssetContentInventory:
                 "computed_slope_map",
                 "computed_registration_error",
             ],
-           model_inputs=[
+            model_inputs=[
                 "Elevation preview and two central profile plots: east-west and north-south.",
                 "Whole-crop elevation statistics and 17 index-spaced numeric samples per profile.",
             ],
@@ -119,10 +119,10 @@ def development_inventory(modality: InputDataModality) -> AssetContentInventory:
                 "Elevation is in metres and profile distance is in kilometres.",
                 "Numeric samples support comparisons along the two supplied profiles.",
                 "Profile-based slope estimates require accounting for sample spacing.",
-                "Crop statistics describe the entire crop; they are not rim, ",
-                "floor or spectral-region statistics.",
-                "Full-grid slope maps and new regional elevation ",
-                "summaries require the underlying raster.",
+                "Crop statistics describe the entire crop; "
+                "they are not rim, floor or spectral-region statistics.",
+                "Full-grid slope maps and new regional elevation summaries "
+                "require the underlying raster.",
                 "Sparse profile samples may miss local extrema.",
                 "The DEM and optical images share MDIS ancestry.",
             ],
