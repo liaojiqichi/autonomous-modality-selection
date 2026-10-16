@@ -1,5 +1,9 @@
 # Autonomous Input Modality Selection
 
+Formal Colab testing: [six-target batches and deployment requirements](docs/heldout_colab.md).
+
+Four-modality Colab model setup: [working-notebook compatibility adapter](docs/notebook_model_compatibility.md).
+
 Active questions: [shared selection-value questions](configs/mercury_selection_questions_v2.json).
 Both maintained notebooks and new formal freezes use this set. The existing held-out
 release uses the [16 October question-only overlay](configs/heldout_question_revision_20261016/revision.json);
