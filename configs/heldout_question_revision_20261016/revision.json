@@ -1,0 +1,17 @@
+{
+  "version": "question-only-revision-20261016",
+  "base_release": "mercury-heldout-four-modality-v2-20261008",
+  "base_release_sha256": "70dd820d6e61ee6040d32500896c50e62eea2932f04846ef54e0cb2c9772f1c0",
+  "base_protocol_sha256": "9f504103dd6f1423738253bc48dcb70ac4ea6761694c1cf3af691380d281a8cf",
+  "base_question_sha256": "647b77db7622efc5f642b9c5dcce2117b36abb3e0dfbde57b84ec4f76570c147",
+  "files": {
+    "cohort.json": "1953fdfe45a57bd071fbeb0d997a470b36f77553d00158226e5f0f9f5f9be8a3",
+    "design.json": "b1d994e6ae289d7a0bc7582467f9a0579d61b625f283ac6d2a87c2797da729d2",
+    "protocol.json": "d1f37bd46c58e68139823f87e55d468388c331b6199aa07bbfa4d894a3592a1e",
+    "questions.json": "04f8f6bcef3acb0449c7bad384e69ecdd407bbb682f29c4a4c8b7954c27b0fd1"
+  },
+  "inherits": "Evidence, prompts, runtime settings and rubric from base release.",
+  "changes": "Question text and answer requirements only; draws and review slots unchanged.",
+  "runtime_approved": false,
+  "model_inference_performed": false
+}

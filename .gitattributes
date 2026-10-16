@@ -1,0 +1,2 @@
+# Preserve exact bytes of hash-pinned question-protocol overlays on every platform.
+configs/heldout_question_revision_20261016/** -text

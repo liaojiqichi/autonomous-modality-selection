@@ -1,5 +1,10 @@
 # Autonomous Input Modality Selection
 
+Active questions: [shared selection-value questions](configs/mercury_selection_questions_v2.json).
+Both maintained notebooks and new formal freezes use this set. The existing held-out
+release uses the [16 October question-only overlay](configs/heldout_question_revision_20261016/revision.json);
+see [migration instructions](docs/question_revision_20261016.md). Use fresh run labels.
+
 Held-out dataset: [preparation, quality review and frozen design](docs/heldout_preparation.md).
 The 30-target four-modality data/design release excludes all twelve previously inspected
 pilot targets and Caloris. Model-runtime approval remains pending; no held-out answers

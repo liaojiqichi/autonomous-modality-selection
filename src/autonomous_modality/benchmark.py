@@ -103,6 +103,7 @@ class QuestionSet(StrictModel):
         "mercury-questions-2.0",
         "mercury-questions-1.0-en.1",
         "mercury-questions-2.0-en.1",
+        "mercury-selection-value-2.0-en.1",
     ] = "mercury-questions-1.0"
     questions: list[QuestionSpec] = Field(min_length=3, max_length=12)
 

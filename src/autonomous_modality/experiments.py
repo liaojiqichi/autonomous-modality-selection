@@ -232,7 +232,9 @@ def main() -> None:
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--benchmark", type=Path, required=True)
-    parser.add_argument("--questions", type=Path, default=Path("configs/mercury_questions_v1.json"))
+    parser.add_argument(
+        "--questions", type=Path, default=Path("configs/mercury_selection_questions_v2.json")
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--protocol", type=Path, default=Path("configs/experiment_protocol.json"))
     parser.add_argument("--split", choices=["development", "held_out"], default="development")

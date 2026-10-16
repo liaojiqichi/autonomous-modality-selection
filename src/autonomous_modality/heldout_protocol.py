@@ -22,10 +22,14 @@ PRIMARY = ("NO_DATA", "ALL_AVAILABLE", "RANDOM", "AGENT_ITERATIVE")
 class FrozenProtocol(StrictModel):
     """Scientific design can be frozen before checkpoint-specific GPU approval."""
 
-    version: Literal["heldout-four-modality-ap-1.0"] = "heldout-four-modality-ap-1.0"
+    version: Literal["heldout-four-modality-ap-1.0", "heldout-four-modality-ap-1.1"] = (
+        "heldout-four-modality-ap-1.1"
+    )
     design_frozen: Literal[True] = True
     runtime_approved: Literal[False] = False
-    revision_authority: str = "User approved ordinal costs on 2026-10-08 in this chat."
+    revision_authority: str = (
+        "User approved ordinal costs on 2026-10-08 and shared revised questions on 2026-10-16."
+    )
     cost_unit: Literal["legacy_ordinal_units"] = "legacy_ordinal_units"
     costs: dict[str, int] = Field(default_factory=lambda: dict(COSTS))
     primary_budget: Literal[4] = 4

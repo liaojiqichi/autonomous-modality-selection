@@ -159,9 +159,9 @@ def notebook_runtime(tmp_path: Path) -> dict[str, Any]:
     receipt_path = root / "receipt.json"
     receipt_path.write_text(json.dumps(hashes), encoding="utf-8")
     source_hashes = {"catalogue.json": sha256(catalogue_path)}
-    specs = json.loads(Path("configs/mercury_questions_v1.json").read_text(encoding="utf-8"))[
-        "questions"
-    ]
+    specs = json.loads(
+        Path("configs/mercury_selection_questions_v2.json").read_text(encoding="utf-8")
+    )["questions"]
     ns: dict[str, Any] = dict(
         __name__="notebook_fixture",
         Any=Any,

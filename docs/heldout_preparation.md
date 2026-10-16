@@ -92,7 +92,9 @@ two selector calls/acquisitions and one observation-informed revision; model FIN
 and system-imposed acquisition limits remain distinct in the log. Literature search
 is outside this protocol.
 
-The unchanged four English question templates produce 120 scenarios. Five random
+The original release's four English question templates produce 120 scenarios. The
+active 16 October question-only revision replaces their wording and requirements;
+see [revision instructions](question_revision_20261016.md). Five random
 draws with replacement are saved per scenario and budget and shared across models.
 Budget 4 has ten legal nonempty subsets; budget 3 has seven. No-data/all-data/iterative
 each contribute one attempt and RANDOM five: 1,920 primary attempts across two models;

@@ -234,7 +234,7 @@ def finalize(root: Path, reviews_path: Path, project: Path) -> HeldoutRelease:
     frozen = root / "frozen"
     frozen.mkdir()
     copies = {
-        "questions.json": project / "configs/mercury_questions_v1.json",
+        "questions.json": project / "configs/mercury_selection_questions_v2.json",
         "rubric.md": project / "docs/heldout_rubric_v1.md",
         "protocol_implementation.py": project / "src/autonomous_modality/heldout_protocol.py",
         "selector_and_answer_prompts.py": project / "src/autonomous_modality/development_inputs.py",

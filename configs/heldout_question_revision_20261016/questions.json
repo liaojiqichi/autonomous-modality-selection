@@ -1,0 +1,53 @@
+{
+  "version": "mercury-selection-value-2.0-en.1",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "question_type": "ANALYTICAL_APPROACH_DISCOVERY",
+      "text": "How well does the historical morphology classification of {crater} describe its present visible structure? Identify a classification claim worth checking, propose ways to assess it, and explain what could account for agreement or disagreement.",
+      "answer_requirements": [
+        "Use the supplied code definitions when discussing a catalogue classification. If no catalogue record is supplied, describe the check conditionally.",
+        "Tie each proposed check to a specific structural feature and explain what result would support or challenge the classification.",
+        "Separate possible classification or observation differences from geological explanations. Agreement alone does not establish a formation mechanism."
+      ],
+      "quantitative_modalities": [],
+      "quantitative_prerequisites": []
+    },
+    {
+      "question_id": "Q2",
+      "question_type": "GENERAL_CRATER_INVESTIGATION",
+      "text": "For {crater}, is any apparent asymmetry more consistent with variation within the crater or with the surrounding terrain? Assess the evidence, propose analyses that could distinguish these explanations, and identify the observations that would change your interpretation.",
+      "answer_requirements": [
+        "Establish whether the supplied evidence shows an asymmetry before explaining it; an inconclusive assessment is acceptable.",
+        "Relate comparisons to their locations and directions. Consider how the catalogue centre and sampled extent affect the distinction between crater relief and background slope.",
+        "State which comparisons the current representations support and what any further measurement would require. Keep proposed measurements separate from results already obtained."
+      ],
+      "quantitative_modalities": [],
+      "quantitative_prerequisites": []
+    },
+    {
+      "question_id": "Q3",
+      "question_type": "CROSS_MODAL_RELATIONSHIP_DISCOVERY",
+      "text": "For {crater}, what evidence would distinguish a difference in surface material between the central area and its surroundings from effects of landform, illumination or spatial averaging? Assess any supplied regional contrasts and propose analyses that could separate the plausible explanations.",
+      "answer_requirements": [
+        "If regional spectral values are supplied, ground the discussion in a specific region-and-wavelength comparison. Otherwise, describe the spectral comparison as a proposed investigation.",
+        "Use any available structural or elevation evidence to assess the explanations. Distinguish geometric sampling regions from mapped geological units.",
+        "Explain what would favour or weaken a material-difference interpretation. Account for spatial averaging and uncertainty without assigning a unique composition from these inputs."
+      ],
+      "quantitative_modalities": [],
+      "quantitative_prerequisites": []
+    },
+    {
+      "question_id": "Q4",
+      "question_type": "EXPLANATORY_PERSPECTIVE_EXPLORATION",
+      "text": "What evidence, if any, suggests that the interior of {crater} was modified after its initial formation? Develop an interpretation from the supplied features, consider plausible alternatives, and propose analyses whose outcomes would help distinguish them.",
+      "answer_requirements": [
+        "Anchor explanations to specific supplied features or values. If the evidence is insufficient, keep the interpretation conditional and identify the unresolved issue.",
+        "Explain how an analysis could favour one mechanism over another. Include preservation of the original structure as an alternative where relevant.",
+        "Prioritize comparisons possible with the supplied packages. State additional requirements for other proposed analyses, and distinguish proposed work from observed or computed results."
+      ],
+      "quantitative_modalities": [],
+      "quantitative_prerequisites": []
+    }
+  ]
+}

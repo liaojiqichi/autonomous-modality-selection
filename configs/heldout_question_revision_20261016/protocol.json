@@ -1,0 +1,72 @@
+{
+  "version": "heldout-four-modality-ap-1.1",
+  "design_frozen": true,
+  "runtime_approved": false,
+  "revision_authority": "User approved shared revised questions on 2026-10-16.",
+  "cost_unit": "legacy_ordinal_units",
+  "costs": {
+    "CRATER_CATALOG": 1,
+    "OPTICAL_IMAGE": 2,
+    "TOPOGRAPHY": 2,
+    "MULTISPECTRAL_IMAGE": 2
+  },
+  "primary_budget": 4,
+  "sensitivity_budget": 3,
+  "maximum_modalities": 2,
+  "maximum_selector_calls": 2,
+  "random_draws": 5,
+  "seed": 42,
+  "image_edge": 448,
+  "profile_samples": 17,
+  "selector_tokens": 512,
+  "answer_tokens": 1024,
+  "maximum_input_tokens": 8192,
+  "answer_repetition_penalty": 1.2,
+  "decoding": "greedy_one_beam",
+  "primary_conditions": [
+    "NO_DATA",
+    "ALL_AVAILABLE",
+    "RANDOM",
+    "AGENT_ITERATIVE"
+  ],
+  "auxiliary_conditions": [
+    "AGENT"
+  ],
+  "models": [
+    "Qwen/Qwen3-VL-8B-Instruct",
+    "google/gemma-4-E4B-it"
+  ],
+  "target_count": 30,
+  "question_count": 4,
+  "primary_answer_attempts": 1920,
+  "primary_with_ablation_attempts": 2160,
+  "sensitivity_with_ablation_attempts": 2160,
+  "question_sha256": "04f8f6bcef3acb0449c7bad384e69ecdd407bbb682f29c4a4c8b7954c27b0fd1",
+  "cohort_sha256": "1953fdfe45a57bd071fbeb0d997a470b36f77553d00158226e5f0f9f5f9be8a3",
+  "pinned_files": {
+    "cohort.json": "1953fdfe45a57bd071fbeb0d997a470b36f77553d00158226e5f0f9f5f9be8a3",
+    "design.json": "b1d994e6ae289d7a0bc7582467f9a0579d61b625f283ac6d2a87c2797da729d2",
+    "questions.json": "04f8f6bcef3acb0449c7bad384e69ecdd407bbb682f29c4a4c8b7954c27b0fd1"
+  },
+  "decisions": [
+    "Four modalities; multispectral evidence is four-region eight-band numeric text.",
+    "Primary agent is iterative; one-shot AGENT is an auxiliary ablation.",
+    "Cumulative acquisition costs; no refunds or hidden retries; stop reasons remain distinct.",
+    "ALL_AVAILABLE uses all four modalities, cost 7, without selection caps.",
+    "RANDOM samples uniformly from nonempty feasible subsets with replacement.",
+    "Five shared draws per scenario and budget; repeated choices remain separate attempts.",
+    "Primary outcomes are separate input-supported A and P counts; also report raw A/P.",
+    "Scientific validity and evidence fidelity are separate checks, not score filters.",
+    "Exclude literature tools, generated target descriptions and review notes from answers.",
+    "Retain allocated targets with quality flags; no unrecorded target substitutions.",
+    "No target-specific enhancement, geological segmentation or centre correction is applied.",
+    "Input-supported means feasible with supplied evidence; later computation is allowed.",
+    "Record failures and truncation by condition; failed outputs have no richness score.",
+    "Mean RANDOM draws within scenario; paired effects aggregate with equal crater weights.",
+    "Report successful pair counts, incomplete random-draw sets and missingness explicitly.",
+    "64 preselected human review slots; up to 16 diagnostic examples kept separate.",
+    "Before inference pin BOTH checkpoint revisions, processors, quantization and software; validate the fixed representations on development targets only.",
+    "Evaluator identity, configuration and calibrated rubric implementation require a separate execution lock before held-out annotation; no held-out calibration.",
+    "Changes to prompts, limits, representations or frozen artifacts require a new version."
+  ]
+}
