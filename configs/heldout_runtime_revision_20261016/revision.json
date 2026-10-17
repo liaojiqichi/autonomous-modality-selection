@@ -1,0 +1,11 @@
+{
+  "version": "heldout-runtime-amendment-20261016-1",
+  "base_question_revision": "question-only-revision-20261016",
+  "changes": [
+    "Adopt development answer policy and inventory 1.1 and matching selector alignment",
+    "Validate and approve each model independently before its formal runs",
+    "Pin complete image processor settings including Gemma soft-token limits"
+  ],
+  "prompt_sha256": "0ca58d9ef44ef7287c6d81ed29b6dec45cfca81f7ae8d85df5f6ae578227b365",
+  "inference_performed": false
+}

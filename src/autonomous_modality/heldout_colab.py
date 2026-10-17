@@ -36,6 +36,7 @@ class Deployment(StrictModel):
     processor_revision: str = Field(pattern=r"^[a-f0-9]{40}$")
     environment: dict[str, str] = Field(min_length=4)
     image_processor_size: dict[str, int]
+    image_processor_config: dict = Field(default_factory=dict)
     validation_file: str
     validation_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     validation_split: Literal["development"]
@@ -105,11 +106,15 @@ def load_context(base: Path, overlay: Path) -> FormalContext:
     return context
 
 
-def load_approval(path: Path, overlay: Path, notebook: Path) -> RuntimeApproval:
-    """Require documented development validation for BOTH model deployments."""
+def load_approval(
+    path: Path, overlay: Path, notebook: Path, model_id: str | None = None
+) -> RuntimeApproval:
+    """Verify approvals; an explicit model permits independently validated deployments."""
     approval = RuntimeApproval.model_validate_json(path.read_bytes())
-    if set(approval.models) != set(MODELS):
+    if model_id is None and set(approval.models) != set(MODELS):
         raise ValueError("BOTH_MODEL_APPROVALS_REQUIRED")
+    if model_id is not None and (model_id not in MODELS or set(approval.models) != {model_id}):
+        raise ValueError("SELECTED_MODEL_APPROVAL_REQUIRED")
     if approval.protocol_sha256 != sha256_file(overlay / "protocol.json"):
         raise ValueError("APPROVAL_PROTOCOL_CHANGED")
     if approval.notebook_sha256 != sha256_file(notebook):

@@ -1,99 +1,86 @@
-# Formal Colab runner: 30 targets in five batches
+# Formal Colab runner: preparation and five six-target batches
 
-Use `notebooks/autonomous_modality_selection_heldout.ipynb`. The development notebook
-remains separate. Each batch has six targets in the original cohort order. Each
-target has 36 attempts per model, including the one-shot auxiliary ablation:
-216 per batch per model, 2,160 across five batches and two models at budget 4.
-Budget 3 is a separate sensitivity run. Five days is a scheduling goal, not a runtime guarantee.
+Open `notebooks/autonomous_modality_selection_heldout.ipynb` from the updated repository.
+It has two modes: `prepare` validates a pinned deployment on existing development
+inputs; `formal` runs six held-out targets. No human approval file needs to be
+hand-written. Each model is confirmed independently.
 
-## Required files before inference
+## First run: Gemma preparation
 
-1. Make the updated repository, including the new notebook and `heldout_colab.py`,
-   available in `/content/autonomous-modality-selection`. Do not update it mid-experiment.
-2. Upload/unpack the full `mercury-heldout-four-modality-v2-20261008` release to Drive.
-   Point DATASET_ROOT to its directory containing `release.json`, `frozen`,
-   `model_inputs` and all 30 `crater-*` folders. The seven-target development download
-   does not contain this release. No new formal download URL is assumed.
-3. Prepare a separately reviewed runtime-approval JSON for both models and the
-   development validation artifacts referenced by it. No approval is fabricated by
-   this runner. Missing approval blocks model loading and held-out inference.
-4. Set a persistent RESULTS_ROOT, one RUN_LABEL, MODEL_ID, BATCH_NUMBER and BUDGET.
-   Run the cells in order. Switching models requires a fresh runtime.
+1. Put `four-modality-three-target-dev-001_results.zip` in Google Drive. Set
+   `DEV_RESULTS_ZIP` to its location. The notebook reuses its actual Eminescu input
+   snapshots, verifying their receipt hashes. The archive omitted catalogue.json;
+   its catalogue is recovered from consistent recorded ALL_AVAILABLE input messages.
+   This provenance is saved explicitly. No scientific data is invented or downloaded.
+2. Select `MODE="prepare"`. The default model and processor revision is
+   `ee0ef6023621cff504d758262d4e04895a5af4a2` for Gemma. This is the newly selected
+   revision, not a recovered historical revision. Qwen requires its own explicit SHA.
+3. Run the cells in order. Preparation installs the previously used Gemma library
+   versions (Transformers 5.19.0, bitsandbytes 0.50.2, accelerate 1.15.0, Pillow 12.3.0).
+   Torch remains the Colab-provided version and is recorded rather than silently
+   reinstalled. If imported libraries change, restart the session and run again.
+   Hugging Face model access must already be authorized; keep tokens out of code.
+4. The development cell runs Q1-Q4 for ALL_AVAILABLE, AGENT and AGENT_ITERATIVE:
+   twelve answers plus their selector calls. It uses the same answer and acquisition
+   functions as the formal notebook. The answer cap is 1024; selector cap 512;
+   input cap 8192; answer repetition penalty 1.2; decoding is greedy.
+5. Inspect the saved attempts, answers and acquisition traces. Set
+   `CONFIRM_DEVELOPMENT_REVIEW=True` only after review and rerun that cell. It checks
+   that all twelve attempts and all logged generations completed with EOS, then
+   saves a model-specific approval. This is technical readiness, not scientific
+   validation or an assessment of A/P superiority.
 
-## Frozen protocol and representations
+The final formal batch cell intentionally stops in preparation mode. Set
+`MODE="formal"` and rerun cells in order after confirmation. A matching model can
+remain loaded; changing model/revision requires a fresh runtime.
 
-The base data release is checked read-only, including its compact inputs. The
-16 October question overlay supplies revised questions and the 120 expanded scenarios.
-The runner reads saved random draws; it never resamples them. It reads compact PNGs,
-terrain text and multispectral text from `model_inputs/crater-ID` without regeneration.
+Failures and truncations remain saved. Preparation will not secretly retry them.
+Resolve their cause, then choose a new PREPARATION_LABEL. Never mark an unsuccessful
+validation as passed. If changing an already approved deployment, preserve its
+approval and use a new APPROVAL_DIR and formal RUN_LABEL.
 
-Only questions were revised in protocol 1.1. Consequently, the runner loads the
-base release's frozen answer policy (`english-ap-input-supported-1.0`), inventory
-and selector alignment. It does not silently import the newer mutable development
-policy. Any adoption of newer prompts or input descriptions requires another explicit
-protocol revision and development validation before formal inference.
+## Formal data and daily batches
 
-The Qwen/Gemma loader and generation function reuse the working development adapter.
-Checkpoint and processor revisions are explicit immutable commit hashes. The original
-protocol's `runtime_approved=false` remains historical; separate reviewed runtime
-approval supplies the deployment authorization, without editing the old release.
+Upload the complete `mercury-heldout-four-modality-v2-20261008` release directory
+or its ZIP to Drive. Set DATASET_ROOT, or DATASET_ZIP and DATASET_EXTRACT. ZIP
+extraction checks paths and does not overwrite an existing extraction. If extraction
+was interrupted, inspect the partial directory and choose a new destination.
+Full release verification runs before any held-out inference.
 
-## Runtime approval schema
+Choose BATCH_NUMBER 1 through 5. Each batch uses six targets in frozen cohort order.
+There are 36 attempts per target per model, including the one-shot auxiliary
+ablation: 216 per batch and 2,160 across five batches and both models at budget 4.
+Budget 3 is a separate sensitivity run. Five days is a scheduling plan, not a
+runtime guarantee. The notebook reads saved shared random draws without resampling.
 
-`RuntimeApproval` and `Deployment` in `heldout_colab.py` are strict schemas. The top
-level has these fields:
+Keep RUN_LABEL and configuration fixed across batches. Every attempt is saved
+immediately to Drive. Existing successful, failed and truncated attempts are
+preserved. Changed configurations block resume; orphan temporary files require
+inspection. Do not run simultaneous writers to the same output folder.
 
-- `version`: `heldout-runtime-approval-1`.
-- `approved_by`: the person reviewing development validation.
-- `protocol_sha256`: SHA-256 of the overlay's `protocol.json`.
-- `notebook_sha256`: SHA-256 of the maintained formal notebook file in the checkout.
-- `models`: entries for both `Qwen/Qwen3-VL-8B-Instruct` and `google/gemma-4-E4B-it`.
+The shared execution lock records dataset, questions, prompt amendment, code,
+budget and batches. Separate per-model locks record deployments. Thus Gemma can
+run before Qwen is ready, while later cross-model runs must use the same shared
+design. Qwen must pass its own development validation.
 
-Each model entry contains:
+## Explicit protocol amendment
 
-- `model_revision`, `processor_revision`: exact 40-character commit hashes.
-- `environment`: exact installed distribution versions, including at least torch,
-  transformers, bitsandbytes, accelerate and Pillow. Include all relevant dependencies
-  from the validated setup. The runner checks every listed version.
-- `image_processor_size`: the actual approved processor size dictionary. Display
-  PNG edge 448 is distinct from the model's image preprocessing settings.
-- `validation_file`: relative path to the existing development validation artifact,
-  resolved from the approval JSON directory; escaping or absolute paths are rejected.
-- `validation_sha256`: the actual SHA-256 of that artifact.
-- `validation_split`: `development`.
-- `reviewed_pass`: true only after reviewing the development validation.
-- `validation_notes`: what was checked, including all-modality inputs, the full
-  answer cap, selector calls, GPU memory and deterministic decoding.
+The original release and question-only overlay remain unchanged. The additional
+`configs/heldout_runtime_revision_20261016` amendment adopts the development 1.1
+answer policy and content inventory, the matching selector alignment, and
+independent deployment confirmation. Its exact prompt bytes are hash-pinned.
+The amendment hash is saved in validation, formal metadata and shared run locks.
+Input data, target allocation, question families, random draws, ordinal costs and
+budgets are inherited unchanged. Revalidate if prompts or implementation change.
 
-Hashes can be calculated with `hashlib.sha256(path.read_bytes()).hexdigest()`.
-Version information comes from `importlib.metadata.version(distribution)` in the
-validated runtime. The approval links evidence of validation; it does not turn an
-unreviewed old experiment into a completed validation. Do not merely fill placeholders
-to bypass the check. No held-out answer is generated as a tuning preflight.
-
-## Daily batching and recovery
-
-Use BATCH_NUMBER 1 through 5. Both models use the same six targets per batch, but only
-one model is resident at a time. Keep RUN_LABEL and the configuration unchanged across
-days. The shared execution lock pins both deployments, source hashes, protocol,
-dataset identity, budget and batch allocation. Per-target metadata additionally pins
-actual processors, environment, functions, input bytes and generation settings.
-
-Each attempt is saved immediately through a temporary file followed by rename. Existing
-valid records, including failures and truncations, are retained. A changed configuration
-or identity blocks resume. A leftover `.json.tmp` file from interruption also blocks
-that attempt; preserve it and investigate before deciding on a documented recovery.
-Do not run simultaneous notebooks writing the same experiment. Drive is persistent
-storage, not a transactional database; retain periodic copies of the results directory.
-
-Byte-identical compact input snapshots and catalogue records are copied into the
-results directory for later annotation. Original science data remain read-only.
-The final cell summarizes technical statuses only. Keep A/P evaluation and decisions
-about protocol changes separate from held-out generation.
+The processor's complete configuration is recorded. Gemma uses max_soft_tokens
+and image_seq_length (280 for this validation); Qwen uses its size/pixel limits.
+The displayed PNG edge of 448 is distinct from these model settings. Both models
+use four-bit NF4 with double quantization and float16 compute.
 
 ## Verification scope
 
-Offline tests use synthetic metadata and fake generation, including a six-target
-216-attempt loop, resume, failure preservation, invalid batch/draw rejection and
-runtime-approval checks. These tests do not validate GPU capacity or model quality.
-Local full-release verification is read-only and performs no model inference.
+Local tests use synthetic input metadata and fake inference, including the actual
+preparation/confirmation cells, single-model approval, failure rejection, formal
+216-attempt batching and resume. These tests do not establish GPU capacity or
+model quality. Actual model validation runs explicitly in Colab.
