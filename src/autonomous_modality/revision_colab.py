@@ -45,6 +45,26 @@ class SavedGeneration(StrictModel):
     error: str | None = None
 
 
+class RuntimeDeployment(StrictModel):
+    """Actual execution settings; this record does not imply a validation run."""
+
+    model_revision: str = Field(pattern=r"^[a-f0-9]{40}$")
+    processor_revision: str = Field(pattern=r"^[a-f0-9]{40}$")
+    environment: dict[str, str] = Field(min_length=4)
+    image_processor_config: dict[str, Any]
+
+
+class RuntimeDeclaration(StrictModel):
+    version: Literal["formal-runtime-declaration-1"] = "formal-runtime-declaration-1"
+    validation_status: Literal["not_performed_by_this_notebook"] = "not_performed_by_this_notebook"
+    protocol_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    notebook_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+    models: dict[str, RuntimeDeployment] = Field(min_length=1, max_length=1)
+    python_version: str
+    gpu: str
+    cuda: str
+
+
 class BaselineRecord(StrictModel):
     """Exact schema of existing formal one-shot records, including failed attempts."""
 
@@ -137,13 +157,23 @@ def read_deployment(source: Path, model_tag: str, budget: int) -> bytes:
 
 def validate_deployment(raw: bytes, metadata: bytes, model: str, runtime: dict) -> None:
     """Check revision provenance even when model.config._commit_hash was null."""
-    approval = RuntimeApproval.model_validate_json(raw)
+    version = json.loads(raw).get("version")
+    declaration = (
+        RuntimeDeclaration.model_validate_json(raw)
+        if version == "formal-runtime-declaration-1"
+        else RuntimeApproval.model_validate_json(raw)
+    )
     config = json.loads(metadata)["config"]
-    if config["runtime_approval_sha256"] != digest_bytes(raw):
+    key = (
+        "runtime_declaration_sha256"
+        if version == "formal-runtime-declaration-1"
+        else ("runtime_approval_sha256")
+    )
+    if config[key] != digest_bytes(raw):
         raise ValueError("BASELINE_DEPLOYMENT_HASH_MISMATCH")
-    if model not in approval.models:
+    if model not in declaration.models:
         raise ValueError("BASELINE_DEPLOYMENT_MODEL_MISSING")
-    deployment = approval.models[model]
+    deployment = declaration.models[model]
     if (
         deployment.model_revision != runtime["model_revision"]
         or deployment.processor_revision != runtime["processor_revision"]
@@ -345,7 +375,11 @@ def run_target_revisions(
         "prompt": PROMPT,
         "base_config": namespace["CONFIG"],
         "runtime": namespace["REVISION_RUNTIME"],
-        "extension_approval": namespace["REVISION_APPROVAL"],
+        "revision_configuration": (
+            namespace["REVISION_PROTOCOL"]
+            if "REVISION_PROTOCOL" in namespace
+            else namespace["REVISION_APPROVAL"]
+        ),
         "baseline_deployment": json.loads(deployment),
         "sources": {
             s[0]["question_id"]: {

@@ -218,7 +218,7 @@ def test_notebook_preserves_inference_and_compiles() -> None:
         if cell["cell_type"] == "code":
             assert cell["outputs"] == [] and cell["execution_count"] is None
             compile("".join(cell["source"]), str(target), "exec")
-    for index in (7, 8, 10, 11, 12, 13, 14):
+    for index in (8, 11, 12, 13, 14):
         expected = ast.dump(ast.parse("".join(base["cells"][index]["source"])))
         assert any(
             ast.dump(ast.parse(s)) == expected
@@ -229,7 +229,12 @@ def test_notebook_preserves_inference_and_compiles() -> None:
     assert "HISTORICAL_SOURCE" not in full
     assert "source = RESULTS_ROOT / RUN_LABEL" in full
     assert "REVISION_CUMULATIVE_BUDGET = 7" in full
-    assert "RevisionResult.model_validate_json" in full
+    assert 'MODE = "prepare"' not in full
+    assert "DEV_RESULTS_ZIP" not in full
+    assert "CONFIRM_DEVELOPMENT_REVIEW" not in full
+    assert "load_approval(" not in full
+    assert "RuntimeDeclaration(" in full
+    assert '"runtime_declaration_sha256": sha256(DEPLOYMENT_PATH)' in full
     assert "Qwen/Qwen3-VL-8B-Instruct" in full
     assert "google/gemma-4-E4B-it" in full
 
@@ -271,3 +276,40 @@ def test_deployment_revision_checked_with_null_config(baseline: tuple) -> None:
     ns["REVISION_RUNTIME"]["model_revision"] = "f" * 40
     with pytest.raises(ValueError, match="DEPLOYMENT_MISMATCH"):
         validate_deployment(raw, encoded, "fixture", ns["REVISION_RUNTIME"])
+
+
+@pytest.mark.parametrize("changed", [None, "hash", "revision", "status"])
+def test_direct_runtime_declaration(baseline: tuple, changed: str | None) -> None:
+    from autonomous_modality.revision_colab import RuntimeDeclaration, RuntimeDeployment
+
+    _, meta, ns, _ = baseline
+    runtime = ns["REVISION_RUNTIME"]
+    declaration = RuntimeDeclaration(
+        protocol_sha256="a" * 64,
+        notebook_sha256="b" * 64,
+        models={
+            "fixture": RuntimeDeployment(
+                model_revision=runtime["model_revision"],
+                processor_revision=runtime["processor_revision"],
+                environment=runtime["environment"],
+                image_processor_config=runtime["image_processor"],
+            )
+        },
+        python_version="3.12",
+        gpu="Fixture",
+        cuda="13.0",
+    ).model_dump(mode="json")
+    if changed == "status":
+        declaration["validation_status"] = "passed"
+    raw = json.dumps(declaration).encode()
+    metadata = json.loads(meta)
+    metadata["config"]["runtime_declaration_sha256"] = (
+        "c" * 64 if changed == "hash" else digest_bytes(raw)
+    )
+    if changed == "revision":
+        runtime["model_revision"] = "f" * 40
+    if changed:
+        with pytest.raises(ValueError):
+            validate_deployment(raw, json.dumps(metadata).encode(), "fixture", runtime)
+    else:
+        validate_deployment(raw, json.dumps(metadata).encode(), "fixture", runtime)

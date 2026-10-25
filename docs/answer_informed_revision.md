@@ -57,13 +57,18 @@ an answer.
 2. Choose `MODEL_ID` and set its actual immutable `MODEL_REVISION` and
    `PROCESSOR_REVISION`. Do not use a Gemma revision with Qwen. The retained
    adapters use Transformers 4.57.6 for Qwen and 5.19.0 for Gemma.
-3. Set the existing formal dataset folder/ZIP and development-results ZIP on
-   Drive. No additional planetary download is needed. Use unused run labels.
-4. Start with `MODE="prepare"`. Run the original 12 development checks and four
-   revision checks. Inspect their outputs and explicitly confirm review in the
-   approval cell. Separate base and extension approvals are saved.
-5. Set `MODE="formal"`, choose `BATCH_NUMBER` 1--5, and rerun in order.
-   A matching loaded model can be reused. Each batch contains six frozen targets.
+3. Set the existing formal dataset folder/ZIP on Drive and use unused run labels.
+4. Run the cells in order. The notebook installs the configured dependencies,
+   loads the selected model, records its actual runtime and starts execution.
+   If already imported libraries change, restart the session once and rerun.
+5. Choose `BATCH_NUMBER` 1--5. A matching loaded model can be reused.
+   Each batch contains six frozen targets. Existing matching records are retained.
+
+The notebook contains no preparation inference, development-results ZIP dependency
+or approval step. Its runtime declaration records versions and settings without
+claiming that a development validation run passed. Previous Gemma checks do not
+establish Qwen GPU compatibility. Environment, immutable checkpoint, dataset and
+resume checks remain active.
 
 Original records go below `RESULTS_ROOT / RUN_LABEL`; revision records go below
 `REVISION_RESULTS_ROOT`. Keep both directories. The initial record is checked
@@ -101,5 +106,4 @@ the unchanged base notebook; run Ruff formatting after regeneration.
 Tests use invented metadata and scripted outputs, covering KEEP identity,
 replacement, cumulative budgets, invalid actions, truncations, provenance drift,
 interrupted runs and preservation of inference cells. Passing these tests does
-not establish GPU compatibility or scientific gains; use Colab development
-validation before formal execution.
+not establish GPU compatibility or scientific gains. Actual inference runs in Colab.
