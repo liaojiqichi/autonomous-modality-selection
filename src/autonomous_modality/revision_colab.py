@@ -277,6 +277,21 @@ def validate_baseline(
     return record
 
 
+def reviewer_assets(namespace: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
+    """Apply an explicit reviewer-only description amendment after baseline validation."""
+    version = namespace.get("REVISION_ASSET_DESCRIPTION_VERSION")
+    if version is None:
+        return namespace["ASSETS"]
+    from autonomous_modality.modality_descriptions import (
+        ASSET_DESCRIPTION_VERSION,
+        describe_assets,
+    )
+
+    if version != ASSET_DESCRIPTION_VERSION:
+        raise ValueError("UNKNOWN_REVISION_ASSET_DESCRIPTION_VERSION")
+    return describe_assets(namespace["ASSETS"])
+
+
 def build_revision_request(
     namespace: Mapping[str, Any], spec: dict[str, Any]
 ) -> InputSelectionRequest:
@@ -297,7 +312,7 @@ def build_revision_request(
                 limitations=[asset["description"]],
                 content_inventory=asset["content_inventory"],
             )
-            for name, asset in sorted(namespace["ASSETS"].items())
+            for name, asset in sorted(reviewer_assets(namespace).items())
         ],
         constraints=InputSelectionConstraints(
             maximum_modalities=namespace["MAX_MODALITIES"],
@@ -389,6 +404,17 @@ def run_target_revisions(
             for s in validated
         },
     }
+    if namespace.get("REVISION_ASSET_DESCRIPTION_VERSION") is not None:
+        from autonomous_modality import modality_descriptions
+
+        config["reviewer_asset_amendment"] = {
+            "version": namespace["REVISION_ASSET_DESCRIPTION_VERSION"],
+            "scope": "reviewer_only",
+            "assets": reviewer_assets(namespace),
+            "implementation_sha256": digest_bytes(
+                Path(modality_descriptions.__file__).read_bytes()
+            ),
+        }
     config_path = destination / "revision_metadata.json"
     preserve_json(config_path, config)
     run_hash = digest_bytes(config_path.read_bytes())

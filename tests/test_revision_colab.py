@@ -174,7 +174,10 @@ def test_baseline_directory(baseline: tuple, tmp_path: Path) -> None:
         read_baseline(tmp_path / "run", suffix.replace("Q1", "Q2"))
 
 
-def test_blocked_resume_and_interrupted_journal(baseline: tuple, tmp_path: Path) -> None:
+@pytest.mark.parametrize("amended", [False, True])
+def test_blocked_resume_and_interrupted_journal(
+    baseline: tuple, tmp_path: Path, amended: bool
+) -> None:
     raw, meta, ns, spec = baseline
     deployment = fixture_deployment(ns)
     metadata = json.loads(meta)
@@ -197,8 +200,17 @@ def test_blocked_resume_and_interrupted_journal(baseline: tuple, tmp_path: Path)
         gc=SimpleNamespace(collect=lambda: None),
         torch=SimpleNamespace(cuda=SimpleNamespace(empty_cache=lambda: None)),
     )
+    if amended:
+        ns["REVISION_ASSET_DESCRIPTION_VERSION"] = "mercury-four-modality-descriptions-2.0"
     destination = tmp_path / "results"
     records = run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy())
+    saved_metadata = json.loads((destination / "revision_metadata.json").read_text())
+    assert ("reviewer_asset_amendment" in saved_metadata) is amended
+    if amended:
+        amendment = saved_metadata["reviewer_asset_amendment"]
+        assert amendment["scope"] == "reviewer_only"
+        assert len(amendment["implementation_sha256"]) == 64
+        assert "Supported analyses:" in amendment["assets"]["OPTICAL_IMAGE"]["description"]
     assert records[0].status == "blocked"
     assert records[0].generation_log == []
     assert run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy()) == records

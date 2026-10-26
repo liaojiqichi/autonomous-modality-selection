@@ -17,6 +17,8 @@ REVISION_RUN_LABEL = "heldout-answer-revision-v1-001"
 REVISION_RESULTS_ROOT = RESULTS_ROOT / REVISION_RUN_LABEL
 REVISION_CUMULATIVE_BUDGET = 7
 REVISION_REVIEW_TOKENS = 512
+# Reviewer-only amendment; initial AGENT settings remain frozen.
+REVISION_ASSET_DESCRIPTION_VERSION = "mercury-four-modality-descriptions-2.0"
 """
 
 EXTENSION_SETUP = """import gc
@@ -45,12 +47,13 @@ REVISION_RUNTIME = {
     "generation_source": inspect.getsource(generate_reply),
 }
 REVISION_FINGERPRINT = {
+    "asset_description_version": REVISION_ASSET_DESCRIPTION_VERSION,
     "policy": REVISION_POLICY.model_dump(mode="json"),
     "notebook_sha256": sha256_file(REVISION_NOTEBOOK),
     "runtime": REVISION_RUNTIME,
     "module_sha256": {
         n: sha256_file(PROJECT / "src/autonomous_modality" / n)
-        for n in ("answer_revision.py", "revision_colab.py")
+        for n in ("answer_revision.py", "revision_colab.py", "modality_descriptions.py")
     },
     "base_notebook_sha256": sha256_file(FORMAL_NOTEBOOK),
     "protocol_sha256": sha256_file(OVERLAY / "protocol.json"),
@@ -154,7 +157,7 @@ def build() -> dict:
         'RUN_LABEL = "heldout-revision-baselines-direct-001"',
     )
     settings = settings.replace(
-        "heldout-answer-revision-v1-001", "heldout-answer-revision-direct-001"
+        "heldout-answer-revision-v1-001", "heldout-answer-revision-descriptions-v2-001"
     )
     loading = "".join(old[7]["source"])
     loading = loading.replace('if MODE == "prepare" and ', "if ")
