@@ -75,7 +75,11 @@ def test_notebook_configuration_initialization_order() -> None:
         for node in tree.body
         if (
             isinstance(node, ast.ImportFrom)
-            and node.module == "autonomous_modality.development_inputs"
+            and node.module
+            in {
+                "autonomous_modality.development_inputs",
+                "autonomous_modality.modality_descriptions",
+            }
         )
         or (
             isinstance(node, ast.Assign)

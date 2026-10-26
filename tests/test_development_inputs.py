@@ -65,14 +65,9 @@ def test_invalid_inventory(change: dict[str, object]) -> None:
 
 
 def test_terrain_limits_preserve_complete_statements() -> None:
-    limits = development_inventory(InputDataModality.TOPOGRAPHY).access_limits
-    assert (
-        "Crop statistics describe the entire crop; "
-        "they are not rim, floor or spectral-region statistics."
-    ) in limits
-    assert (
-        "Full-grid slope maps and new regional elevation summaries require the underlying raster."
-    ) in limits
+    limits = " ".join(development_inventory(InputDataModality.TOPOGRAPHY).access_limits)
+    assert "Crop statistics describe the whole crop" in limits
+    assert "full-grid slopes and new regional statistics require the raster" in limits
 
 
 def test_concise_policy_preserves_open_ended_richness() -> None:

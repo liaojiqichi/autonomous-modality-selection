@@ -74,33 +74,32 @@ def test_actual_spectral_granularity_and_uncertainty() -> None:
     assert "16 spectral" not in str(modality_inventory("MULTISPECTRAL_IMAGE").model_dump())
 
 
-def test_frozen_inventory_not_changed() -> None:
+def test_compatibility_inventory_uses_current_description() -> None:
     before = development_inventory(InputDataModality.OPTICAL_IMAGE)
-    modality_inventory("OPTICAL_IMAGE")
-    assert development_inventory(InputDataModality.OPTICAL_IMAGE) == before
-    assert before.version == "mercury-development-contents-1.1"
+    assert before == modality_inventory("OPTICAL_IMAGE")
+    assert before.version == ASSET_DESCRIPTION_VERSION
+    before.available_fields.clear()
+    assert development_inventory(InputDataModality.OPTICAL_IMAGE).available_fields
 
 
-def test_reviewer_amendment_keeps_baseline_configuration() -> None:
-    assets = {
-        name: {
-            "cost": 1 if name == "CRATER_CATALOG" else 2,
-            "description": "fixture",
-            "content_inventory": None,
-        }
-        for name in NAMES
-    }
+def test_reviewer_uses_identical_current_assets() -> None:
+    assets = describe_assets(
+        {name: {"cost": 1 if name == "CRATER_CATALOG" else 2} for name in NAMES}
+    )
     ns = {
         "ASSETS": assets,
-        "CONFIG": {"assets": copy.deepcopy(assets)},
+        "CONFIG": {
+            "assets": copy.deepcopy(assets),
+            "inventory_version": ASSET_DESCRIPTION_VERSION,
+            "asset_description_version": ASSET_DESCRIPTION_VERSION,
+            "asset_description_scope": "all_selectors",
+        },
         "CASE_ID": "1",
         "CASE_NAME": "Fixture",
         "MAX_MODALITIES": 2,
         "BUDGET": 4,
     }
     before = copy.deepcopy(ns)
-    assert reviewer_assets(ns) is assets
-    ns["REVISION_ASSET_DESCRIPTION_VERSION"] = ASSET_DESCRIPTION_VERSION
     request = build_revision_request(
         ns,
         {
@@ -110,13 +109,40 @@ def test_reviewer_amendment_keeps_baseline_configuration() -> None:
             "answer_requirements": ["Compare"],
         },
     )
-    assert ns["ASSETS"] == before["ASSETS"] and ns["CONFIG"] == before["CONFIG"]
-    assert all(a.content_inventory.version == ASSET_DESCRIPTION_VERSION for a in request.assets)
-    assert request.constraints.maximum_total_cost == 4
-    assert {a.modality.value: a.estimated_cost for a in request.assets} == {
-        name: assets[name]["cost"] for name in NAMES
+    assert ns == before
+    for a in request.assets:
+        assert a.limitations == [assets[a.modality.value]["description"]]
+        assert (
+            a.content_inventory.model_dump(mode="json")
+            == assets[a.modality.value]["content_inventory"]
+        )
+    assert reviewer_assets(ns) == assets
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("asset_description_version", "old"),
+        ("inventory_version", "old"),
+        ("assets", {}),
+        ("asset_description_scope", "reviewer_only"),
+    ],
+)
+def test_reviewer_rejects_mixed_configuration(field: str, value: object) -> None:
+    assets = describe_assets({"OPTICAL_IMAGE": {"cost": 2}})
+    config = {
+        "assets": assets,
+        "inventory_version": ASSET_DESCRIPTION_VERSION,
+        "asset_description_version": ASSET_DESCRIPTION_VERSION,
+        "asset_description_scope": "all_selectors",
     }
-    assert "Supported analyses:" in request.assets[0].limitations[0]
-    ns["REVISION_ASSET_DESCRIPTION_VERSION"] = "unknown"
-    with pytest.raises(ValueError, match="UNKNOWN_REVISION_ASSET_DESCRIPTION_VERSION"):
-        reviewer_assets(ns)
+    config[field] = value
+    with pytest.raises(ValueError, match="MIXED_ASSET_DESCRIPTIONS"):
+        reviewer_assets({"ASSETS": assets, "CONFIG": config})
+
+
+def test_reviewer_does_not_silently_upgrade_old_assets() -> None:
+    with pytest.raises(ValueError, match="ASSET_DESCRIPTIONS_OUTDATED"):
+        reviewer_assets(
+            {"ASSETS": {"OPTICAL_IMAGE": {"cost": 2, "description": "old"}}, "CONFIG": {}}
+        )

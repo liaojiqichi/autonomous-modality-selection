@@ -10,6 +10,7 @@ from types import SimpleNamespace
 import pytest
 
 from autonomous_modality.answer_revision import RevisionPolicy
+from autonomous_modality.modality_descriptions import ASSET_DESCRIPTION_VERSION, describe_assets
 from autonomous_modality.revision_colab import (
     MATCHED_CONFIG,
     canonical_messages,
@@ -44,12 +45,16 @@ def baseline() -> tuple[bytes, bytes, dict, dict]:
     spec = {"question_id": "Q1", "text": "Test {crater}", "answer_requirements": ["Check"]}
     cfg = dict.fromkeys(MATCHED_CONFIG, "same fixture value")
     cfg["answer_tokens"] = 1024
+    cfg["assets"] = describe_assets({"OPTICAL_IMAGE": {"cost": 2}})
+    cfg["inventory_version"] = ASSET_DESCRIPTION_VERSION
+    cfg["asset_description_version"] = ASSET_DESCRIPTION_VERSION
+    cfg["asset_description_scope"] = "all_selectors"
     ns = {
         "CONFIG": cfg,
         "MODEL_NAME": "fixture",
         "CASE_ID": "1",
         "CASE_NAME": "Example",
-        "ASSETS": {"OPTICAL_IMAGE": {"cost": 2}},
+        "ASSETS": copy.deepcopy(cfg["assets"]),
         "valid_selection": sorted,
         "generate_reply": fixture_function,
         "build_answer_messages": fixture_messages,
@@ -174,10 +179,7 @@ def test_baseline_directory(baseline: tuple, tmp_path: Path) -> None:
         read_baseline(tmp_path / "run", suffix.replace("Q1", "Q2"))
 
 
-@pytest.mark.parametrize("amended", [False, True])
-def test_blocked_resume_and_interrupted_journal(
-    baseline: tuple, tmp_path: Path, amended: bool
-) -> None:
+def test_blocked_resume_and_interrupted_journal(baseline: tuple, tmp_path: Path) -> None:
     raw, meta, ns, spec = baseline
     deployment = fixture_deployment(ns)
     metadata = json.loads(meta)
@@ -200,17 +202,15 @@ def test_blocked_resume_and_interrupted_journal(
         gc=SimpleNamespace(collect=lambda: None),
         torch=SimpleNamespace(cuda=SimpleNamespace(empty_cache=lambda: None)),
     )
-    if amended:
-        ns["REVISION_ASSET_DESCRIPTION_VERSION"] = "mercury-four-modality-descriptions-2.0"
     destination = tmp_path / "results"
     records = run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy())
     saved_metadata = json.loads((destination / "revision_metadata.json").read_text())
-    assert ("reviewer_asset_amendment" in saved_metadata) is amended
-    if amended:
-        amendment = saved_metadata["reviewer_asset_amendment"]
-        assert amendment["scope"] == "reviewer_only"
-        assert len(amendment["implementation_sha256"]) == 64
-        assert "Supported analyses:" in amendment["assets"]["OPTICAL_IMAGE"]["description"]
+    assert "reviewer_asset_amendment" not in saved_metadata
+    descriptions = saved_metadata["asset_descriptions"]
+    assert descriptions["scope"] == "all_selectors"
+    assert descriptions["assets"] == saved_metadata["base_config"]["assets"]
+    assert len(descriptions["implementation_sha256"]) == 64
+    assert "Supported analyses:" in descriptions["assets"]["OPTICAL_IMAGE"]["description"]
     assert records[0].status == "blocked"
     assert records[0].generation_log == []
     assert run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy()) == records

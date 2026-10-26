@@ -17,14 +17,14 @@ REVISION_RUN_LABEL = "heldout-answer-revision-v1-001"
 REVISION_RESULTS_ROOT = RESULTS_ROOT / REVISION_RUN_LABEL
 REVISION_CUMULATIVE_BUDGET = 7
 REVISION_REVIEW_TOKENS = 512
-# Reviewer-only amendment; initial AGENT settings remain frozen.
-REVISION_ASSET_DESCRIPTION_VERSION = "mercury-four-modality-descriptions-2.0"
+# All selectors use the same current modality declarations.
 """
 
 EXTENSION_SETUP = """import gc
 import inspect
 
 from autonomous_modality.answer_revision import RevisionPolicy
+from autonomous_modality.modality_descriptions import ASSET_DESCRIPTION_VERSION
 from autonomous_modality.revision_colab import run_target_revisions
 
 REVISION_POLICY = RevisionPolicy(
@@ -47,7 +47,8 @@ REVISION_RUNTIME = {
     "generation_source": inspect.getsource(generate_reply),
 }
 REVISION_FINGERPRINT = {
-    "asset_description_version": REVISION_ASSET_DESCRIPTION_VERSION,
+    "asset_description_version": ASSET_DESCRIPTION_VERSION,
+    "asset_description_scope": "all_selectors",
     "policy": REVISION_POLICY.model_dump(mode="json"),
     "notebook_sha256": sha256_file(REVISION_NOTEBOOK),
     "runtime": REVISION_RUNTIME,
@@ -153,11 +154,11 @@ def build() -> dict:
         'MODEL_REVISION = ""  # Supply the selected immutable checkpoint revision.',
     )
     settings = settings.replace(
-        'RUN_LABEL = "heldout-four-modality-prompt-v11-001"',
-        'RUN_LABEL = "heldout-revision-baselines-direct-001"',
+        'RUN_LABEL = "heldout-four-modality-unified-descriptions-v2-001"',
+        'RUN_LABEL = "heldout-revision-baselines-unified-v2-001"',
     )
     settings = settings.replace(
-        "heldout-answer-revision-v1-001", "heldout-answer-revision-descriptions-v2-001"
+        "heldout-answer-revision-v1-001", "heldout-answer-revision-unified-v2-001"
     )
     loading = "".join(old[7]["source"])
     loading = loading.replace('if MODE == "prepare" and ', "if ")

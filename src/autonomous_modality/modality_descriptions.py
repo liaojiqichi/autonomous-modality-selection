@@ -1,7 +1,7 @@
 """Versioned declarations for the four compact Mercury evidence packages.
 
-These describe representations, not target-specific observations. Frozen inventories
-and historical manifests remain unchanged; callers explicitly adopt this version.
+All current selectors use these declarations.
+Historical manifests and scientific evidence remain unchanged.
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ from typing import Any
 
 from pydantic import Field
 
-from autonomous_modality.development_inputs import development_inventory
 from autonomous_modality.models import AssetContentInventory, InputDataModality, StrictModel
 
 ASSET_DESCRIPTION_VERSION = "mercury-four-modality-descriptions-2.0"
@@ -37,6 +36,60 @@ class ModalityDescription(StrictModel):
                 ("Interpretation limits", "interpretation_limits"),
             )
         )
+
+
+_FIELD_DECLARATIONS = {
+    "CRATER_CATALOG": {
+        "available_fields": [
+            "id",
+            "name",
+            "lat_n",
+            "lon_e_0",
+            "diameter",
+            "int_shp",
+            "rim_shp",
+            "cent_struc",
+            "rayed",
+        ],
+        "absent_fields": [
+            "crater_depth",
+            "absolute_age",
+            "relative_age",
+            "composition",
+            "modification_history",
+            "regional_crater_population",
+        ],
+    },
+    "OPTICAL_IMAGE": {
+        "available_fields": ["optical_local", "optical_context"],
+        "absent_fields": ["calibrated_reflectance", "composition", "absolute_age"],
+    },
+    "TOPOGRAPHY": {
+        "available_fields": [
+            "shape",
+            "crs_wkt",
+            "transform",
+            "source_units",
+            "source_scale",
+            "source_offset",
+            "valid_fraction",
+            "minimum_m",
+            "maximum_m",
+            "mean_m",
+            "std_m",
+            "profiles.axis",
+            "profiles.distance_km",
+            "profiles.elevation_m",
+        ],
+        "absent_fields": [
+            "measured_crater_depth",
+            "rim_floor_segmentation",
+            "absolute_age",
+            "computed_slope_map",
+            "computed_registration_error",
+        ],
+    },
+}
 
 
 _DESCRIPTIONS = {
@@ -133,10 +186,12 @@ def modality_inventory(modality: InputDataModality | str) -> AssetContentInvento
             access_limits=[declaration.interpretation_limits],
         )
     else:
-        inventory = development_inventory(modality).model_copy(deep=True)
-        inventory.version = ASSET_DESCRIPTION_VERSION
-        inventory.model_inputs = [declaration.contents, declaration.coverage]
-        inventory.access_limits = [declaration.interpretation_limits]
+        inventory = AssetContentInventory(
+            version=ASSET_DESCRIPTION_VERSION,
+            **_FIELD_DECLARATIONS[modality.value],
+            model_inputs=[declaration.contents, declaration.coverage],
+            access_limits=[declaration.interpretation_limits],
+        )
     return inventory
 
 
@@ -153,3 +208,9 @@ def describe_assets(assets: Mapping[str, dict[str, Any]]) -> dict[str, dict[str,
         asset["description"] = modality_description(name).text()
         asset["content_inventory"] = modality_inventory(name).model_dump(mode="json")
     return result
+
+
+def validate_asset_descriptions(assets: Mapping[str, dict[str, Any]]) -> None:
+    """Reject stale or mixed declarations before any selector/model call."""
+    if dict(assets) != describe_assets(assets):
+        raise ValueError("ASSET_DESCRIPTIONS_OUTDATED: rebuild ASSETS with describe_assets")

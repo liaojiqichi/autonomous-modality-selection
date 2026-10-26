@@ -4,9 +4,10 @@ Apply only to the current catalogue/local-context-image/terrain-summary adapters
 These declarations describe model-visible representations, not new scientific data.
 """
 
+from autonomous_modality.modality_descriptions import ASSET_DESCRIPTION_VERSION, modality_inventory
 from autonomous_modality.models import AssetContentInventory, InputDataModality
 
-INVENTORY_VERSION = "mercury-development-contents-1.1"
+INVENTORY_VERSION = ASSET_DESCRIPTION_VERSION
 SELECTOR_ALIGNMENT_VERSION = "selector-ap-input-supported-1.0"
 SELECTOR_ALIGNMENT = (
     "Select for the question and answer requirements. A means distinct analytical tests "
@@ -43,88 +44,8 @@ ANSWER_POLICY = (
 
 
 def development_inventory(modality: InputDataModality) -> AssetContentInventory:
-    """Return a fresh declaration for the existing core development representations."""
-    common = {"version": INVENTORY_VERSION}
-    if modality == InputDataModality.CRATER_CATALOG:
-        return AssetContentInventory(
-            **common,
-            available_fields=[
-                "id",
-                "name",
-                "lat_n",
-                "lon_e_0",
-                "diameter",
-                "int_shp",
-                "rim_shp",
-                "cent_struc",
-                "rayed",
-            ],
-            absent_fields=[
-                "crater_depth",
-                "absolute_age",
-                "relative_age",
-                "composition",
-                "modification_history",
-                "regional_crater_population",
-            ],
-            model_inputs=["One historical catalogue JSON record and morphology-code legend"],
-            access_limits=[
-                "Latitude/longitude in degrees; diameter in km.",
-                "Field names are metadata; values become visible only after acquisition.",
-                "Historical morphology codes require review; no measured depth or age is supplied.",
-            ],
-        )
-    if modality == InputDataModality.OPTICAL_IMAGE:
-        return AssetContentInventory(
-            **common,
-            available_fields=["optical_local", "optical_context"],
-            absent_fields=["calibrated_reflectance", "composition", "absolute_age"],
-            model_inputs=["Two display-stretched PNG views: local target and regional context"],
-            access_limits=[
-                "Images and coordinate annotations only; no executable raster-analysis tools.",
-                "Brightness alone cannot establish composition or age.",
-            ],
-        )
-    if modality == InputDataModality.TOPOGRAPHY:
-        return AssetContentInventory(
-            **common,
-            available_fields=[
-                "shape",
-                "crs_wkt",
-                "transform",
-                "source_units",
-                "source_scale",
-                "source_offset",
-                "valid_fraction",
-                "minimum_m",
-                "maximum_m",
-                "mean_m",
-                "std_m",
-                "profiles.axis",
-                "profiles.distance_km",
-                "profiles.elevation_m",
-            ],
-            absent_fields=[
-                "measured_crater_depth",
-                "rim_floor_segmentation",
-                "absolute_age",
-                "computed_slope_map",
-                "computed_registration_error",
-            ],
-            model_inputs=[
-                "Elevation preview and two central profile plots: east-west and north-south.",
-                "Whole-crop elevation statistics and 17 index-spaced numeric samples per profile.",
-            ],
-            access_limits=[
-                "Elevation is in metres and profile distance is in kilometres.",
-                "Numeric samples support comparisons along the two supplied profiles.",
-                "Profile-based slope estimates require accounting for sample spacing.",
-                "Crop statistics describe the entire crop; "
-                "they are not rim, floor or spectral-region statistics.",
-                "Full-grid slope maps and new regional elevation summaries "
-                "require the underlying raster.",
-                "Sparse profile samples may miss local extrema.",
-                "The DEM and optical images share MDIS ancestry.",
-            ],
-        )
-    raise ValueError("No development-view inventory is defined for this modality")
+    """Return the shared current inventory through the existing public interface."""
+    try:
+        return modality_inventory(modality)
+    except ValueError as exc:
+        raise ValueError("No development-view inventory is defined for this modality") from exc

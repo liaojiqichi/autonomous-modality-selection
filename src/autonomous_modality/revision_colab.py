@@ -208,6 +208,8 @@ MATCHED_CONFIG = (
     "language",
     "answer_policy_version",
     "inventory_version",
+    "asset_description_version",
+    "asset_description_scope",
     "cost_unit",
     "question_sha256",
     "source_sha256",
@@ -278,18 +280,23 @@ def validate_baseline(
 
 
 def reviewer_assets(namespace: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
-    """Apply an explicit reviewer-only description amendment after baseline validation."""
-    version = namespace.get("REVISION_ASSET_DESCRIPTION_VERSION")
-    if version is None:
-        return namespace["ASSETS"]
+    """Require identical current declarations for the initial selector and reviewer."""
     from autonomous_modality.modality_descriptions import (
         ASSET_DESCRIPTION_VERSION,
-        describe_assets,
+        validate_asset_descriptions,
     )
 
-    if version != ASSET_DESCRIPTION_VERSION:
-        raise ValueError("UNKNOWN_REVISION_ASSET_DESCRIPTION_VERSION")
-    return describe_assets(namespace["ASSETS"])
+    assets = namespace["ASSETS"]
+    validate_asset_descriptions(assets)
+    config = namespace["CONFIG"]
+    if (
+        config.get("asset_description_version") != ASSET_DESCRIPTION_VERSION
+        or config.get("inventory_version") != ASSET_DESCRIPTION_VERSION
+        or config.get("asset_description_scope") != "all_selectors"
+        or config.get("assets") != assets
+    ):
+        raise ValueError("MIXED_ASSET_DESCRIPTIONS: use one current version and a new run label")
+    return copy.deepcopy(assets)
 
 
 def build_revision_request(
@@ -370,6 +377,7 @@ def run_target_revisions(
     policy: RevisionPolicy,
 ) -> list[RevisionAttempt]:
     """Validate baseline records before inference; save once and resume safely."""
+    reviewer_assets(namespace)  # Reject mixed versions before reading or generating answers.
     deployment = read_deployment(source, namespace["MODEL_TAG"], namespace["BUDGET"])
     validated = []
     for spec in namespace["QUESTIONS"]:
@@ -404,17 +412,14 @@ def run_target_revisions(
             for s in validated
         },
     }
-    if namespace.get("REVISION_ASSET_DESCRIPTION_VERSION") is not None:
-        from autonomous_modality import modality_descriptions
+    from autonomous_modality import modality_descriptions
 
-        config["reviewer_asset_amendment"] = {
-            "version": namespace["REVISION_ASSET_DESCRIPTION_VERSION"],
-            "scope": "reviewer_only",
-            "assets": reviewer_assets(namespace),
-            "implementation_sha256": digest_bytes(
-                Path(modality_descriptions.__file__).read_bytes()
-            ),
-        }
+    config["asset_descriptions"] = {
+        "version": modality_descriptions.ASSET_DESCRIPTION_VERSION,
+        "scope": "all_selectors",
+        "assets": reviewer_assets(namespace),
+        "implementation_sha256": digest_bytes(Path(modality_descriptions.__file__).read_bytes()),
+    }
     config_path = destination / "revision_metadata.json"
     preserve_json(config_path, config)
     run_hash = digest_bytes(config_path.read_bytes())
