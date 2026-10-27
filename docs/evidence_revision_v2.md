@@ -4,6 +4,23 @@ Use `notebooks/autonomous_modality_selection_answer_revision_formal.ipynb` for
 Qwen or Gemma. Select a fresh run label and run its cells in order. Existing
 results remain unchanged. No additional preparation inference is required.
 
+## Audit interface update (2.1)
+
+The model returns `claims` keyed by all supplied statement IDs. A generated
+output template lists every required key, including headings. Sources are positive
+integer IDs in a program-built registry, with the modality and block type attached.
+The original text/images remain in the saved generation messages. No verbatim
+quotation or generated image-location field is required. This avoids treating
+paraphrases and null-location formatting as scientific failures. It does not prove
+that a source supports a claim: that remains an explicit model judgment.
+
+Missing or extra statements, duplicate JSON keys, unknown source IDs and retained
+claims without sources still fail validation. Missing IDs are reported in the
+error. The notebook stops after the first unsuccessful revision by default; it
+never silently repairs or retries an audit. Historical failed results stay unchanged.
+Use a fresh run label for this schema change. The default is
+`heldout-evidence-revision-v21-001`.
+
 ## Conditions and output
 
 Each target produces 32 baseline answers (four questions, with five RANDOM draws
@@ -19,7 +36,7 @@ summaries are stored under this same run. There is no separate revision run labe
 ## Workflow
 
 1. Audit every nonempty line of the initial AGENT answer. Identify the source
-   modality and exact text quote or image location. Label each line supported,
+   modality and numbered source block. Label each line supported,
    proposed, unsupported, misused or uncertain. Mixed lines with unsupported
    content are removed as a whole.
 2. Retain supported statements and evidence-grounded proposals. Assess their
@@ -30,7 +47,7 @@ summaries are stored under this same run. There is no separate revision run labe
    complete revised answer from the final evidence and retained statements,
    including when the decision is KEEP.
 
-Text quotations and source identifiers are checked deterministically. Scientific
+Statement coverage and source identifiers are checked deterministically. Scientific
 support and visual interpretation remain model judgments and require independent
 quality evaluation. Audit output does not establish factual correctness.
 

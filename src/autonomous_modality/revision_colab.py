@@ -451,6 +451,8 @@ def run_target_revisions(
                 raise ValueError("EXISTING_REVISION_CHANGED")
             attempts.append(previous)
             print(spec["question_id"], "Retained", previous.status)
+            if namespace.get("STOP_ON_REVISION_ERROR", False) and previous.status != "success":
+                break
             continue
         # Exclusive intent journal prevents hidden retries after interruption/OOM/session loss.
         intent = target.with_suffix(".started.json")
@@ -500,4 +502,6 @@ def run_target_revisions(
         log.clear()
         namespace["gc"].collect()
         namespace["torch"].cuda.empty_cache()
+        if namespace.get("STOP_ON_REVISION_ERROR", False) and attempt.status != "success":
+            break
     return attempts

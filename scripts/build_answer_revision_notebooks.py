@@ -17,6 +17,7 @@ SETTINGS = """
 REVISION_RESULTS_ROOT = RESULTS_ROOT / RUN_LABEL
 REVISION_AUDIT_TOKENS = 2048
 REVISION_REVIEW_TOKENS = 512
+STOP_ON_REVISION_ERROR = True
 # All selectors use the same current modality declarations.
 """
 
@@ -92,6 +93,8 @@ for TARGET_ID in BATCH_TARGET_IDS:
         globals(), source, destination, REVISION_POLICY,
     )
     print("Revision records:", TARGET_ID, len(target_attempts), "/ 4")
+    if STOP_ON_REVISION_ERROR and any(a.status != "success" for a in target_attempts):
+        raise RuntimeError("Revision stopped after a failed attempt; inspect its saved error.")
     GENERATION_LOG.clear()
     gc.collect()
     torch.cuda.empty_cache()
@@ -221,7 +224,7 @@ def build() -> dict:
     )
     settings = settings.replace(
         'RUN_LABEL = "heldout-four-modality-unified-descriptions-v2-001"',
-        'RUN_LABEL = "heldout-evidence-revision-v2-001"',
+        'RUN_LABEL = "heldout-evidence-revision-v21-001"',
     )
     loading = "".join(old[7]["source"])
     loading = loading.replace('if MODE == "prepare" and ', "if ")
@@ -241,7 +244,7 @@ def build() -> dict:
     target_setup = target_setup.replace(
         '"protocol": RECORD_VERSION,',
         '"protocol": RECORD_VERSION,\n'
-        '    "experiment_amendment": "evidence-attributed-revision-2.0",',
+        '    "experiment_amendment": "evidence-attributed-revision-2.1",',
     )
     evidence_source, experiment_source = current_execution_sources(old)
     notebook["cells"] = [

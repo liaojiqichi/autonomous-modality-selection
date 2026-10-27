@@ -54,22 +54,14 @@ def fixture() -> tuple[InputSelectionRequest, InitialAnswer]:
 
 def audit_payload() -> dict:
     return {
-        "claims": [
-            {
-                "statement_id": "S1",
+        "claims": {
+            "S1": {
                 "verdict": "proposed",
-                "sources": [
-                    {"evidence_id": "CRATER_CATALOG:1", "quote": "fixture value", "locator": None}
-                ],
+                "sources": [1],
                 "reason": "Test proposal linked to input.",
             },
-            {
-                "statement_id": "S2",
-                "verdict": "unsupported",
-                "sources": [],
-                "reason": "Age absent.",
-            },
-        ]
+            "S2": {"verdict": "unsupported", "sources": [], "reason": "Age absent."},
+        }
     }
 
 
@@ -114,6 +106,9 @@ def test_audit_always_revises_and_overruns_survive(action: str, selected: list[s
         request, initial, RevisionPolicy(), load, generate, answer, execution_kind="test"
     )
     assert r.status == "success" and r.answer != initial.answer
+    audit_input = json.loads(calls[0][1]["content"][0]["text"])
+    assert list(audit_input["output_template"]["claims"]) == ["S1", "S2"]
+    assert audit_input["evidence_registry"]["1"]["modality"] == "CRATER_CATALOG"
     assert len(answers) == 1 and len(r.retained_statements) == 1
     assert "An invented age" not in json.dumps(calls[1])
     assert r.selected == selected
@@ -134,36 +129,63 @@ def test_audit_always_revises_and_overruns_survive(action: str, selected: list[s
 @pytest.mark.parametrize(
     "mutation,error",
     [
-        ("missing", "AUDIT_COVERAGE"),
-        ("duplicate", "AUDIT_COVERAGE"),
+        ("missing", "missing=\\['S2'\\]"),
+        ("extra", "extra=\\['S99'\\]"),
         ("source", "UNKNOWN_EVIDENCE"),
-        ("quote", "EVIDENCE_QUOTE"),
+        ("duplicate_source", "DUPLICATE_EVIDENCE"),
         ("unsupported_retained", "RETAINED_CLAIM"),
     ],
 )
 def test_bad_audit_rejected(mutation: str, error: str) -> None:
     obj = audit_payload()
     if mutation == "missing":
-        obj["claims"].pop()
-    if mutation == "duplicate":
-        obj["claims"][1]["statement_id"] = "S1"
+        obj["claims"].pop("S2")
+    if mutation == "extra":
+        obj["claims"]["S99"] = obj["claims"]["S2"].copy()
     if mutation == "source":
-        obj["claims"][0]["sources"][0]["evidence_id"] = "UNSEEN:1"
-    if mutation == "quote":
-        obj["claims"][0]["sources"][0]["quote"] = "invented quotation"
+        obj["claims"]["S1"]["sources"] = [99]
+    if mutation == "duplicate_source":
+        obj["claims"]["S1"]["sources"] = [1, 1]
     if mutation == "unsupported_retained":
-        obj["claims"][1]["verdict"] = "supported"
+        obj["claims"]["S2"]["verdict"] = "supported"
     with pytest.raises(ValueError, match=error):
         validate_audit(
             EvidenceAudit.model_validate(obj),
             {"S1": "a", "S2": "b"},
             {
-                "CRATER_CATALOG:1": {
+                "1": {
                     "modality": "CRATER_CATALOG",
                     "block": {"type": "text", "text": "fixture value"},
                 }
             },
         )
+
+
+@pytest.mark.parametrize("source", [True, "1", 0, -1, 1.0])
+def test_evidence_ids_are_strict_positive_integers(source: object) -> None:
+    obj = audit_payload()
+    obj["claims"]["S1"]["sources"] = [source]
+    with pytest.raises(ValidationError):
+        EvidenceAudit.model_validate(obj)
+
+
+def test_duplicate_json_statement_cannot_be_silently_lost() -> None:
+    from autonomous_modality.evidence_revision import parse_object
+
+    with pytest.raises(ValueError, match="DUPLICATE_JSON_KEY"):
+        parse_object('{"claims":{"S1":{},"S1":{}}}')
+
+
+def test_image_reference_resolves_without_invented_locator() -> None:
+    retained = validate_audit(
+        EvidenceAudit.model_validate(audit_payload()),
+        {"S1": "proposal", "S2": "unsupported"},
+        {"1": {"modality": "OPTICAL_IMAGE", "block": {"type": "image", "image": "fixture.png"}}},
+    )
+    assert retained[0]["modalities"] == ["OPTICAL_IMAGE"]
+    assert retained[0]["sources"] == [
+        {"evidence_id": 1, "modality": "OPTICAL_IMAGE", "block_type": "image"}
+    ]
 
 
 def test_truncated_audit_stops_without_hidden_retry() -> None:

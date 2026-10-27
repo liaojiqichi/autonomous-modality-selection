@@ -205,7 +205,7 @@ def test_blocked_resume_and_interrupted_journal(baseline: tuple, tmp_path: Path)
     destination = tmp_path / "results"
     records = run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy())
     saved_metadata = json.loads((destination / "revision_metadata.json").read_text())
-    assert saved_metadata["reviewer_prompt_version"] == "evidence-audit-and-selection-2.0"
+    assert saved_metadata["reviewer_prompt_version"] == "evidence-audit-and-selection-2.1"
     assert "reviewer_asset_amendment" not in saved_metadata
     descriptions = saved_metadata["asset_descriptions"]
     assert descriptions["scope"] == "all_selectors"
@@ -242,6 +242,7 @@ def test_notebook_preserves_inference_and_compiles() -> None:
     assert "HISTORICAL_SOURCE" not in full
     assert "source = RESULTS_ROOT / RUN_LABEL" in full
     assert "REVISION_AUDIT_TOKENS = 2048" in full
+    assert "STOP_ON_REVISION_ERROR = True" in full
     assert "REVISION_RESULTS_ROOT = RESULTS_ROOT / RUN_LABEL" in full
     assert "REVISION_RUN_LABEL =" not in full
     assert 'MODE = "prepare"' not in full
@@ -328,3 +329,37 @@ def test_direct_runtime_declaration(baseline: tuple, changed: str | None) -> Non
             validate_deployment(raw, json.dumps(metadata).encode(), "fixture", runtime)
     else:
         validate_deployment(raw, json.dumps(metadata).encode(), "fixture", runtime)
+
+
+def test_fail_fast_preserves_first_failure(baseline: tuple, tmp_path: Path) -> None:
+    raw, meta, ns, spec = baseline
+    deployment = fixture_deployment(ns)
+    metadata = json.loads(meta)
+    metadata["config"]["runtime_approval_sha256"] = digest_bytes(deployment)
+    meta = json.dumps(metadata).encode()
+    folder = tmp_path / "source/fixture/crater-1/budget-4"
+    folder.mkdir(parents=True)
+    specs = []
+    for qid in ("Q1", "Q2"):
+        item = dict(spec, question_id=qid)
+        specs.append(item)
+        data = json.loads(raw)
+        data.update(question_id=qid, status="error", run_sha256=digest_bytes(meta))
+        (folder / f"{qid}__AGENT__r01.json").write_text(json.dumps(data))
+    (folder / "run_metadata.json").write_bytes(meta)
+    (folder.parent.parent / "deployment-lock-b4.json").write_bytes(deployment)
+    ns.update(
+        QUESTIONS=specs,
+        MODEL_TAG="fixture",
+        BUDGET=4,
+        REVISION_APPROVAL={},
+        GENERATION_LOG=[],
+        STOP_ON_REVISION_ERROR=True,
+        gc=SimpleNamespace(collect=lambda: None),
+        torch=SimpleNamespace(cuda=SimpleNamespace(empty_cache=lambda: None)),
+    )
+    destination = tmp_path / "results"
+    attempts = run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy())
+    assert len(attempts) == 1 and attempts[0].status == "blocked"
+    assert not (destination / "Q2__AGENT_ANSWER_REVISION__r01.started.json").exists()
+    assert run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy()) == attempts
