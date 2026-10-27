@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from autonomous_modality.answer_revision import RevisionPolicy
+from autonomous_modality.evidence_revision import RevisionPolicy
 from autonomous_modality.modality_descriptions import ASSET_DESCRIPTION_VERSION, describe_assets
 from autonomous_modality.revision_colab import (
     MATCHED_CONFIG,
@@ -205,7 +205,7 @@ def test_blocked_resume_and_interrupted_journal(baseline: tuple, tmp_path: Path)
     destination = tmp_path / "results"
     records = run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy())
     saved_metadata = json.loads((destination / "revision_metadata.json").read_text())
-    assert saved_metadata["reviewer_prompt_version"] == "answer-revision-evidence-retention-1.1"
+    assert saved_metadata["reviewer_prompt_version"] == "evidence-audit-and-selection-2.0"
     assert "reviewer_asset_amendment" not in saved_metadata
     descriptions = saved_metadata["asset_descriptions"]
     assert descriptions["scope"] == "all_selectors"
@@ -231,7 +231,7 @@ def test_notebook_preserves_inference_and_compiles() -> None:
         if cell["cell_type"] == "code":
             assert cell["outputs"] == [] and cell["execution_count"] is None
             compile("".join(cell["source"]), str(target), "exec")
-    for index in (8, 11, 12, 13, 14):
+    for index in (8, 11, 12):
         expected = ast.dump(ast.parse("".join(base["cells"][index]["source"])))
         assert any(
             ast.dump(ast.parse(s)) == expected
@@ -241,7 +241,9 @@ def test_notebook_preserves_inference_and_compiles() -> None:
     full = "\n".join(sources)
     assert "HISTORICAL_SOURCE" not in full
     assert "source = RESULTS_ROOT / RUN_LABEL" in full
-    assert "REVISION_CUMULATIVE_BUDGET = 7" in full
+    assert "REVISION_AUDIT_TOKENS = 2048" in full
+    assert "REVISION_RESULTS_ROOT = RESULTS_ROOT / RUN_LABEL" in full
+    assert "REVISION_RUN_LABEL =" not in full
     assert 'MODE = "prepare"' not in full
     assert "DEV_RESULTS_ZIP" not in full
     assert "CONFIRM_DEVELOPMENT_REVIEW" not in full

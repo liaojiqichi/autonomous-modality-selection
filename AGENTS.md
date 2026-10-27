@@ -27,7 +27,20 @@ scientific input-data-modality selection for Mercury crater questions.
 
 ## Engineering rules
 
-### Iterative development extension
+### Current evidence revision experiment
+
+- The active formal notebook runs NO_DATA, ALL_AVAILABLE, RANDOM (five draws),
+  AGENT and AGENT_ANSWER_REVISION. AGENT_ITERATIVE is retired from this experiment.
+- Audit the initial AGENT answer against modality-labelled evidence before deciding
+  whether to replace inputs. Always generate a revised answer, including KEEP.
+- Final retained-modality cost is the primary cost comparison; cumulative accessed
+  cost is reported separately. Budget exceedances remain in results and statistics.
+- Keep at most two final modalities. Budget is a soft threshold for revision only;
+  the initial selector retains its existing constraints.
+- Store baselines and revisions under one run label and the same target folder.
+- Preserve historical runs and their supporting code without reactivating them.
+
+### Historical iterative development extension
 
 - AGENT_ITERATIVE is the new feedback condition; AGENT retains historical one-shot
   semantics as an auxiliary ablation. Keep the original CLI default compatible.

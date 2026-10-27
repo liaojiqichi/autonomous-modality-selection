@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import copy
 import json
 from pathlib import Path
@@ -13,9 +14,8 @@ BASE = ROOT / "notebooks/autonomous_modality_selection_heldout.ipynb"
 
 SETTINGS = """
 # Separate additive protocol: never write revision results into a historical run.
-REVISION_RUN_LABEL = "heldout-answer-revision-v1-001"
-REVISION_RESULTS_ROOT = RESULTS_ROOT / REVISION_RUN_LABEL
-REVISION_CUMULATIVE_BUDGET = 7
+REVISION_RESULTS_ROOT = RESULTS_ROOT / RUN_LABEL
+REVISION_AUDIT_TOKENS = 2048
 REVISION_REVIEW_TOKENS = 512
 # All selectors use the same current modality declarations.
 """
@@ -23,12 +23,12 @@ REVISION_REVIEW_TOKENS = 512
 EXTENSION_SETUP = """import gc
 import inspect
 
-from autonomous_modality.answer_revision import PROMPT_VERSION, RevisionPolicy
+from autonomous_modality.evidence_revision import PROMPT_VERSION, RevisionPolicy
 from autonomous_modality.modality_descriptions import ASSET_DESCRIPTION_VERSION
 from autonomous_modality.revision_colab import run_target_revisions
 
 REVISION_POLICY = RevisionPolicy(
-    maximum_cumulative_cost=REVISION_CUMULATIVE_BUDGET,
+    audit_tokens=REVISION_AUDIT_TOKENS,
     reviewer_tokens=REVISION_REVIEW_TOKENS,
 )
 REVISION_RUNTIME = {
@@ -55,7 +55,8 @@ REVISION_FINGERPRINT = {
     "runtime": REVISION_RUNTIME,
     "module_sha256": {
         n: sha256_file(PROJECT / "src/autonomous_modality" / n)
-        for n in ("answer_revision.py", "revision_colab.py", "modality_descriptions.py")
+        for n in ("answer_revision.py", "evidence_revision.py",
+                  "revision_colab.py", "modality_descriptions.py")
     },
     "base_notebook_sha256": sha256_file(FORMAL_NOTEBOOK),
     "protocol_sha256": sha256_file(OVERLAY / "protocol.json"),
@@ -68,9 +69,7 @@ RUN = """from IPython import get_ipython
 batch_shell = get_ipython()
 if batch_shell is None:
     raise RuntimeError("Run in Colab/IPython.")
-if REVISION_RESULTS_ROOT.resolve() == (RESULTS_ROOT / RUN_LABEL).resolve():
-    raise ValueError("Revision and baseline output roots must be separate.")
-preserve_json(REVISION_RESULTS_ROOT / MODEL_TAG / f"execution-lock-b{BUDGET}.json", {
+preserve_json(REVISION_RESULTS_ROOT / MODEL_TAG / f"revision-execution-lock-b{BUDGET}.json", {
     "fingerprint": REVISION_FINGERPRINT,
     "runtime_declaration": RUNTIME_DECLARATION.model_dump(mode="json"),
     "target_batches": [FORMAL.batch_ids(b) for b in range(1, 6)],
@@ -82,7 +81,7 @@ preserve_json(
 )
 for TARGET_ID in BATCH_TARGET_IDS:
     print("Starting revision target:", TARGET_ID)
-    for cell_source in (TARGET_SETUP_SOURCE, SELECTOR_SOURCE, ANSWER_SOURCE, ITERATIVE_SOURCE):
+    for cell_source in (TARGET_SETUP_SOURCE, SELECTOR_SOURCE, ANSWER_SOURCE, EVIDENCE_SOURCE):
         batch_shell.run_cell(cell_source, store_history=True).raise_error()
     # Run all original conditions; their saved AGENT record is the shared initial draft.
     batch_shell.run_cell(EXPERIMENT_SOURCE, store_history=True).raise_error()
@@ -101,19 +100,23 @@ print("Revision batch finished:", BATCH_NUMBER)
 
 SUMMARY = """from collections import Counter
 
-counts = Counter()
-actions = Counter()
+from autonomous_modality.evidence_revision import summarize_costs
+from autonomous_modality.revision_colab import RevisionAttempt
+
+attempts = []
 for target_id in BATCH_TARGET_IDS:
-    folder = REVISION_RESULTS_ROOT / MODEL_TAG / f"crater-{target_id}" / f"budget-{BUDGET}"
+    folder = RESULTS_ROOT / RUN_LABEL / MODEL_TAG / f"crater-{target_id}" / f"budget-{BUDGET}"
     for path in folder.glob("Q*__AGENT_ANSWER_REVISION__r01.json"):
-        item = json.loads(path.read_text(encoding="utf-8"))
-        counts[item["status"]] += 1
-        action = (item.get("result") or {}).get("action")
-        if action:
-            actions[action["action"]] += 1
-print("Revision records:", sum(counts.values()), "/ 24")
-print("Statuses:", dict(counts), "Actions:", dict(actions))
-print("Saved separately:", REVISION_RESULTS_ROOT)
+        attempts.append(RevisionAttempt.model_validate_json(path.read_bytes()))
+summary = summarize_costs([a.result for a in attempts if a.result is not None])
+summary["attempt_statuses"] = dict(Counter(a.status for a in attempts))
+summary["expected_revision_records"] = len(BATCH_TARGET_IDS) * 4
+summary["revision_records"] = len(attempts)
+print(json.dumps(summary, indent=2))
+summary_path = (RESULTS_ROOT / RUN_LABEL / MODEL_TAG
+                / f"cost-summary-b{BUDGET}-batch{BATCH_NUMBER}.json")
+summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+print("All conditions are saved together:", RESULTS_ROOT / RUN_LABEL)
 """
 
 
@@ -126,6 +129,68 @@ def code(source: str) -> dict:
         "outputs": [],
         "source": source.splitlines(keepends=True),
     }
+
+
+def current_execution_sources(old: list[dict]) -> tuple[str, str]:
+    """Reuse verified evidence routing and remove the retired iterative experiment branch."""
+    evidence = ast.literal_eval(ast.parse("".join(old[13]["source"])).body[0].value)
+    tree = ast.parse(evidence)
+    functions = [
+        ast.get_source_segment(evidence, node)
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef)
+        and node.name in {"build_evidence_content", "load_notebook_evidence"}
+    ]
+    evidence = (
+        "from autonomous_modality.iterative import ContentBlock, EvidenceObservation\n"
+        "from autonomous_modality.models import InputDataModality\n"
+        "PINNED_RECEIPT_SHA256 = sha256(receipt_path)\n\n" + "\n\n".join(functions)
+    )
+    experiment = ast.literal_eval(ast.parse("".join(old[14]["source"])).body[0].value)
+    start = experiment.index('        if self.condition == "AGENT_ITERATIVE":')
+    end = experiment.index("        return self", start)
+    experiment = experiment[:start] + experiment[end:]
+    start = experiment.index('                if condition == "AGENT_ITERATIVE":')
+    end = experiment.index("                selection_seconds", start)
+    experiment = (
+        experiment[:start]
+        + (
+            "                selected, rationale = select_inputs(\n"
+            "                    condition, question, question_id, draw_index=draw_index\n"
+            "                )\n"
+        )
+        + experiment[end:]
+    )
+    experiment = experiment.replace(', "AGENT_ITERATIVE"', "")
+    experiment = experiment.replace(
+        "    iterative_selection: IterativeSelection | None = None",
+        "    iterative_selection: None = None",
+    )
+    experiment = experiment.replace("    select_inputs_iterative,\n", "")
+    experiment = experiment.replace(
+        '    "iterative_policy": ITERATIVE_POLICY.model_dump(mode="json"),\n', ""
+    )
+    experiment = experiment.replace(
+        '    "condition_roles": {"AGENT": "one_shot_ablation": "primary_agent"},',
+        '    "condition_roles": {"AGENT": "initial_selection"},',
+    )
+    # Replace the whole roles line, independent of formatting in the frozen source.
+    experiment = "\n".join(
+        '    "condition_roles": {"AGENT": "initial_selection"},'
+        if '"condition_roles":' in line
+        else line
+        for line in experiment.splitlines()
+    )
+    experiment = experiment.replace(", IterativeSelection)", ")")
+    experiment = experiment.replace(
+        "set(protocol.primary_conditions + protocol.auxiliary_conditions)",
+        "(\n    set(protocol.primary_conditions + protocol.auxiliary_conditions)\n"
+        '    - {"AGENT_ITERATIVE"}\n)',
+    )
+    return (
+        "EVIDENCE_SOURCE = r'''" + evidence + "'''\n",
+        "EXPERIMENT_SOURCE = r'''" + experiment + "'''\n",
+    )
 
 
 def build() -> dict:
@@ -156,10 +221,7 @@ def build() -> dict:
     )
     settings = settings.replace(
         'RUN_LABEL = "heldout-four-modality-unified-descriptions-v2-001"',
-        'RUN_LABEL = "heldout-revision-baselines-retention-v1-001"',
-    )
-    settings = settings.replace(
-        "heldout-answer-revision-v1-001", "heldout-answer-revision-retention-v1-001"
+        'RUN_LABEL = "heldout-evidence-revision-v2-001"',
     )
     loading = "".join(old[7]["source"])
     loading = loading.replace('if MODE == "prepare" and ', "if ")
@@ -172,6 +234,16 @@ def build() -> dict:
         '"runtime_approval_sha256": sha256(APPROVAL_PATH)',
         '"runtime_declaration_sha256": sha256(DEPLOYMENT_PATH)',
     )
+    target_setup = target_setup.replace(
+        "4 questions x (1 + 1 + 5 + 1 + 1) = 36 formal attempts.",
+        "4 questions x (1 + 1 + 5 + 1) = 32 baseline attempts, plus 4 audited revisions.",
+    )
+    target_setup = target_setup.replace(
+        '"protocol": RECORD_VERSION,',
+        '"protocol": RECORD_VERSION,\n'
+        '    "experiment_amendment": "evidence-attributed-revision-2.0",',
+    )
+    evidence_source, experiment_source = current_execution_sources(old)
     notebook["cells"] = [
         {
             "cell_type": "markdown",
@@ -181,8 +253,11 @@ def build() -> dict:
                 "Run cells in order. This notebook starts formal execution directly and records ",
                 "the actual runtime configuration. It performs no development inference. ",
                 "Select a model, its immutable revision, and a six-target batch. ",
-                "Original conditions ",
-                "are preserved; each saved AGENT answer is reviewed once for KEEP or RESELECT. ",
+                "NO_DATA, ALL_AVAILABLE, RANDOM and AGENT are retained. ",
+                "Each AGENT answer is audited, then revised with retained or reselected evidence. ",
+                "The earlier iterative condition is retired from this experiment. ",
+                "Costs above the threshold remain in the results. ",
+                "All conditions share one run folder. ",
                 "Completed records are retained when resuming.\n",
             ],
         },
@@ -194,7 +269,9 @@ def build() -> dict:
         old[8],
         code(EXTENSION_SETUP + DECLARATION),
         code(target_setup),
-        *old[11:15],
+        *old[11:13],
+        code(evidence_source),
+        code(experiment_source),
         code(RUN),
         code(SUMMARY),
     ]

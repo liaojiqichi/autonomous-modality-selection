@@ -14,10 +14,11 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from autonomous_modality.answer_revision import (
+from autonomous_modality.answer_revision import InitialAnswer
+from autonomous_modality.evidence_revision import (
+    AUDIT_PROMPT,
     PROMPT,
     PROMPT_VERSION,
-    InitialAnswer,
     RevisionPolicy,
     RevisionResult,
     run_answer_revision,
@@ -98,7 +99,7 @@ class BaselineRecord(StrictModel):
 
 
 class RevisionAttempt(StrictModel):
-    version: Literal["answer-revision-colab-1"] = "answer-revision-colab-1"
+    version: Literal["answer-revision-colab-2"] = "answer-revision-colab-2"
     condition: Literal["AGENT_ANSWER_REVISION"] = "AGENT_ANSWER_REVISION"
     model: str
     case_id: str
@@ -340,34 +341,47 @@ def execute_revision(
     log = namespace["GENERATION_LOG"]
     generator = notebook_generator(namespace["generate_reply"], log)
 
-    def fresh_answer(selected: list[str]) -> GenerationReply:
-        # Recheck frozen bytes before loading any replacement evidence.
-        for name in selected:
-            namespace["load_notebook_evidence"](namespace["InputDataModality"](name))
+    def load(modality: str) -> list[dict[str, Any]]:
+        observation = namespace["load_notebook_evidence"](namespace["InputDataModality"](modality))
+        return [block.model_dump(mode="json", exclude_none=True) for block in observation.blocks]
+
+    def fresh_answer(selected: list[str], retained: list[dict[str, Any]]) -> GenerationReply:
+        messages = copy.deepcopy(
+            namespace["build_answer_messages"](
+                request.question.text, spec["answer_requirements"], selected
+            )
+        )
+        messages[0]["content"].append(
+            {
+                "type": "text",
+                "text": (
+                    "Revise using the final evidence and retained draft statements below. "
+                    "Their retention is a model judgment; check them against the evidence. "
+                    "Correct mistakes and omit unsupported claims or inferences from misused data. "
+                    "Use only final selected inputs. "
+                    "Claims linked to discarded inputs were removed. "
+                    "Return the complete answer under the original "
+                    "language and length requirements.\n" + json.dumps(retained, ensure_ascii=False)
+                ),
+            }
+        )
         before = len(log)
-        text = namespace["answer_question"](
-            request.question.text, spec["answer_requirements"], selected
+        text = namespace["generate_reply"](
+            messages,
+            max_new_tokens=namespace["ANSWER_TOKENS"],
+            repetition_penalty=namespace["ANSWER_REPETITION_PENALTY"],
         )
         if len(log) != before + 1 or log[-1]["text"] != text:
             raise ValueError("REVISED_ANSWER_NOT_LOGGED_EXACTLY_ONCE")
-        entry = log[-1]
         return GenerationReply(
             **{
-                k: entry[k]
+                k: log[-1][k]
                 for k in ("text", "finish_reason", "input_tokens", "output_tokens", "peak_gpu_gib")
             }
         )
 
-    for name in initial.selected:
-        namespace["load_notebook_evidence"](namespace["InputDataModality"](name))
     return run_answer_revision(
-        request,
-        initial,
-        policy,
-        namespace["build_evidence_content"](initial.selected),
-        generator,
-        fresh_answer,
-        execution_kind="model",
+        request, initial, policy, load, generator, fresh_answer, execution_kind="model"
     )
 
 
@@ -397,6 +411,7 @@ def run_target_revisions(
         "version": policy.version,
         "policy": policy.model_dump(mode="json"),
         "prompt": PROMPT,
+        "audit_prompt": AUDIT_PROMPT,
         "reviewer_prompt_version": PROMPT_VERSION,
         "base_config": namespace["CONFIG"],
         "runtime": namespace["REVISION_RUNTIME"],

@@ -20,17 +20,11 @@ The former optical-description variant switch has been retired.
 
 ## Reviewer decision update
 
-The formal answer-revision notebook now uses reviewer prompt
-`answer-revision-evidence-retention-1.1`. It asks the reviewer to distinguish
-misused available evidence, evidence supplied by another package, and information
-unavailable from every package. Before replacing inputs, it checks what the
-complete replacement loses as well as what it adds. KEEP returns the original
-answer unchanged and does not certify its quality.
+The active formal notebook uses `evidence-audit-and-selection-2.0`.
+It audits the initial answer against labelled modality evidence, retains supported
+statements and grounded proposals, and selects the final evidence package.
+KEEP also generates a revised answer. See [Evidence revision](evidence_revision_v2.md).
 
-The KEEP/RESELECT schema, costs, initial selector, answer policy and model settings
-are unchanged. The default baseline and revision labels are now
-`heldout-revision-baselines-retention-v1-001` and
-`heldout-answer-revision-retention-v1-001`. Open the updated formal notebook and
-run setup in order. Preserve existing runs under their original labels.
-This is a prompt intervention; semantic compliance and improvement require model
-experiments and are not guaranteed by offline tests.
+Baseline and revision records share the run label
+`heldout-evidence-revision-v2-001` and the same target directory.
+Historical results retain their original descriptions and protocol.
