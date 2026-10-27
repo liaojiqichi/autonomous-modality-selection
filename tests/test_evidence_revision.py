@@ -357,3 +357,171 @@ def test_malformed_audit_json_is_still_rejected() -> None:
 
     with pytest.raises(json.JSONDecodeError):
         parse_object('{"claims":')
+
+
+@pytest.mark.parametrize("same_set", [True, False])
+def test_reviewer_explanation_defects_do_not_change_selected_evidence(same_set: bool) -> None:
+    from autonomous_modality.evidence_revision import normalize_review_decision
+
+    request, initial = fixture()
+    options = final_options(request, initial)
+    selected = initial.selected if same_set else ["OPTICAL_IMAGE", "TOPOGRAPHY"]
+    oid = next(k for k, o in options.items() if o["selected"] == selected)
+    raw = {
+        "action": "RESELECT",
+        "option_id": oid,
+        "reason": "x" * 401,
+        "remaining_value": 3.0,
+        "evidence_gap": "No age measurement supplied.",
+    }
+    original = json.dumps(raw)
+    decision, changes = normalize_review_decision(raw, options, initial.selected)
+    assert json.dumps(raw) == original
+    assert decision.action == ("KEEP" if same_set else "RESELECT")
+    assert decision.option_id == (None if same_set else oid)
+    assert len(decision.reason) == 400
+    assert decision.remaining_value.startswith("Unavailable:")
+    codes = {c.code for c in changes}
+    assert "EXPLANATION_TOO_LONG" in codes and "EXPLANATION_INVALID_TYPE" in codes
+    assert ("SAME_SELECTION_AS_INITIAL" in codes) is same_set
+
+
+@pytest.mark.parametrize(
+    "field,limit", [("reason", 400), ("remaining_value", 600), ("evidence_gap", 600)]
+)
+@pytest.mark.parametrize("kind", ["valid", "long", "empty", "number", "null", "list", "bool"])
+def test_explanation_boundaries(field: str, limit: int, kind: str) -> None:
+    from autonomous_modality.evidence_revision import normalize_review_decision
+
+    request, initial = fixture()
+    raw = {
+        "action": "KEEP",
+        "option_id": None,
+        "reason": "Keep inputs.",
+        "remaining_value": "A test remains.",
+        "evidence_gap": "Age unavailable.",
+    }
+    raw[field] = {
+        "valid": "x" * limit,
+        "long": "x" * (limit + 1),
+        "empty": "  ",
+        "number": 3.0,
+        "null": None,
+        "list": [],
+        "bool": True,
+    }[kind]
+    decision, changes = normalize_review_decision(
+        raw, final_options(request, initial), initial.selected
+    )
+    assert len(getattr(decision, field)) <= limit
+    assert bool(changes) is (kind != "valid")
+
+
+@pytest.mark.parametrize(
+    "mutation,error",
+    [
+        ("unknown", "UNKNOWN_FINAL_OPTION"),
+        ("missing_option", "RESELECT_REQUIRES_OPTION"),
+        ("conflict", "CONFLICTING_KEEP_OPTION"),
+        ("missing_field", "REVIEW_FIELDS_MISMATCH"),
+        ("extra", "REVIEW_FIELDS_MISMATCH"),
+        ("action", "UNKNOWN_REVIEW_ACTION"),
+    ],
+)
+def test_ambiguous_review_still_fails(mutation: str, error: str) -> None:
+    from autonomous_modality.evidence_revision import normalize_review_decision
+
+    request, initial = fixture()
+    options = final_options(request, initial)
+    raw = {
+        "action": "KEEP",
+        "option_id": None,
+        "reason": "Keep inputs.",
+        "remaining_value": "A test remains.",
+        "evidence_gap": "Age unavailable.",
+    }
+    if mutation == "unknown":
+        raw["option_id"] = "R999"
+    if mutation == "missing_option":
+        raw["action"] = "RESELECT"
+    if mutation == "conflict":
+        raw["option_id"] = next(k for k, o in options.items() if o["selected"] == ["OPTICAL_IMAGE"])
+    if mutation == "missing_field":
+        raw.pop("reason")
+    if mutation == "extra":
+        raw["score"] = 3
+    if mutation == "action":
+        raw["action"] = "OTHER"
+    with pytest.raises(ValueError, match=error):
+        normalize_review_decision(raw, options, initial.selected)
+
+
+def test_normalized_keep_preserves_raw_action_and_still_generates_answer() -> None:
+    request, initial = fixture()
+    options = final_options(request, initial)
+    oid = next(k for k, o in options.items() if o["selected"] == initial.selected)
+    raw = {
+        "action": "RESELECT",
+        "option_id": oid,
+        "reason": "x" * 401,
+        "remaining_value": 3.0,
+        "evidence_gap": "Missing measurements.",
+    }
+    calls = []
+    answers = []
+
+    def generate(messages: list[dict], tokens: int) -> GenerationReply:
+        calls.append(messages)
+        if len(calls) == 2:
+            payload = json.loads(messages[1]["content"][0]["text"])
+            assert payload["initial_option_id"] == oid
+            assert payload["output_schema"]["properties"]["reason"]["maxLength"] == 400
+            assert payload["output_schema"]["properties"]["remaining_value"]["type"] == "string"
+        return GenerationReply(
+            text=json.dumps(audit_payload() if len(calls) == 1 else raw), finish_reason="eos"
+        )
+
+    def answer(selected: list[str], retained: list[dict]) -> GenerationReply:
+        answers.append(selected)
+        return GenerationReply(text="Revised fixture answer", finish_reason="eos")
+
+    r = run_answer_revision(
+        request,
+        initial,
+        RevisionPolicy(),
+        lambda n: [{"type": "text", "text": "fixture evidence"}],
+        generate,
+        answer,
+        execution_kind="test",
+    )
+    assert r.status == "success" and r.action.action == "KEEP"
+    assert r.reviewer_raw_object == raw
+    assert json.loads(r.reviewer_generation.text) == raw
+    assert len(r.reviewer_adjustments) == 3
+    assert answers == [initial.selected] and len(calls) == 2
+    assert r.costs.additional_access_cost == 0 and r.costs.final_cost_delta == 0
+    assert r.quality_checks.scientific_validity == "not_independently_checked"
+    assert r.quality_checks.evidence_fidelity == "not_independently_checked"
+    assert r.quality_checks.audit_flagged_statement_ids == ["S2"]
+    assert RevisionResult.model_validate_json(r.model_dump_json()) == r
+
+
+def test_keep_with_matching_explicit_option_is_logged() -> None:
+    from autonomous_modality.evidence_revision import normalize_review_decision
+
+    request, initial = fixture()
+    options = final_options(request, initial)
+    oid = next(k for k, o in options.items() if o["selected"] == initial.selected)
+    decision, changes = normalize_review_decision(
+        {
+            "action": "KEEP",
+            "option_id": oid,
+            "reason": "Keep inputs.",
+            "remaining_value": "A test remains.",
+            "evidence_gap": "Age unavailable.",
+        },
+        options,
+        initial.selected,
+    )
+    assert decision.option_id is None
+    assert changes[0].code == "KEEP_OPTION_MATCHES_INITIAL"

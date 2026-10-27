@@ -4,7 +4,7 @@ Use `notebooks/autonomous_modality_selection_answer_revision_formal.ipynb` for
 Qwen or Gemma. Select a fresh run label and run its cells in order. Existing
 results remain unchanged. No additional preparation inference is required.
 
-## Audit interface update (2.2)
+## Audit interface update (2.3)
 
 The model returns `claims` keyed by all supplied statement IDs. A generated
 output template lists every required scientific line. Explicit standalone Markdown
@@ -23,7 +23,7 @@ preserved and processing continues. They never enter the retained answer. Missin
 error. The notebook stops after the first unsuccessful revision by default; it
 never silently repairs or retries an audit. Historical failed results stay unchanged.
 Use a fresh run label for this schema change. The default is
-`heldout-evidence-revision-v22-001`.
+`heldout-evidence-revision-v23-001`.
 
 ## Conditions and output
 
@@ -82,3 +82,31 @@ input-feasible proposals from work needing additional scientific data. Later
 computation is allowed. Semantic checks remain model judgments; source
 validation alone does not prove scientific support. Initial answers and raw
 audits remain unchanged. Earlier baseline runs are not automatically migrated.
+
+## Reviewer interface (2.3)
+
+The reviewer receives a full JSON example, the executable JSON schema, and the
+initial set's option ID. `reason` is a string of 1-400 characters;
+`remaining_value` and `evidence_gap` are strings of 1-600 characters.
+`remaining_value` describes what the retained answer can resolve; it is not a
+score, cost or budget. All three explanations should be short sentences.
+
+The raw generated response and parsed `reviewer_raw_object` are preserved.
+`reviewer_adjustments` records deterministic interface handling:
+
+- RESELECT of the initial set becomes KEEP (`SAME_SELECTION_AS_INITIAL`).
+- KEEP with an explicit matching option becomes KEEP with null option ID.
+- Long explanatory strings are shortened only in the normalized action; their
+  full values remain in the raw record (`EXPLANATION_TOO_LONG`).
+- Non-string or empty explanations become an explicit unavailable-description
+  marker. No scientific explanation is invented or inferred from a number.
+- Unknown options, conflicting KEEP options, missing/extra fields, malformed JSON
+  and truncated generation remain errors. No fallback selection or retry is used.
+
+Normalized KEEP still produces the revised answer and correct unchanged-set cost
+accounting. Explanation adjustments do not modify the selected evidence.
+`quality_checks` stores audit-flagged and source-less statement IDs separately;
+scientific validity and evidence fidelity remain `not_independently_checked`.
+A technically successful run is not a positive scientific quality assessment.
+This update adds no model calls. Historical results remain unchanged, and earlier
+baseline folders are not automatically migrated into the new run.

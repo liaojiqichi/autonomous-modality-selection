@@ -15,8 +15,8 @@ from autonomous_modality.answer_revision import InitialAnswer, RevisionAction
 from autonomous_modality.iterative import Generate, GenerationReply
 from autonomous_modality.models import AssetAvailability, InputSelectionRequest, StrictModel
 
-VERSION = "evidence-attributed-revision-2.2"
-PROMPT_VERSION = "evidence-audit-and-selection-2.2"
+VERSION = "evidence-attributed-revision-2.3"
+PROMPT_VERSION = "evidence-audit-and-selection-2.3"
 AUDIT_PROMPT = """Audit every supplied draft statement using the evidence registry.
 Return one JSON object with exactly claims. claims is an object keyed by ALL required
 statement IDs, exactly once each. Standalone Markdown headings have been excluded.
@@ -50,12 +50,20 @@ Do not confuse final-set cost with cumulative access. Removed inputs are not ava
 final answer. Sparse profiles are not a full DEM; local/context crops are not stereo pairs.
 A is a distinct feasible analytical path; P is a feature-grounded explanation. No fixed count.
 Return JSON with exactly action, option_id, reason, remaining_value and evidence_gap.
-KEEP has option_id null. RESELECT names a listed option. Keep each explanation concise.
+KEEP has option_id null. RESELECT names a listed option different from the initial set.
+reason, remaining_value and evidence_gap must be English JSON STRINGS, each one short sentence.
+Maximum characters: reason 400, remaining_value 600, evidence_gap 600; aim below 180 each.
+remaining_value describes what the retained answer can still resolve about the question.
+It is not a score, cost, number or budget. evidence_gap names the unresolved information.
+Example: {"action":"KEEP","option_id":null,
+"reason":"The current evidence permits correcting the interpretation.",
+"remaining_value":"The retained comparison identifies a classification claim to test.",
+"evidence_gap":"The available inputs do not establish an age."}
 Do not endorse removed claims. The audit is model judgment, not verified scientific truth."""
 
 
 class RevisionPolicy(StrictModel):
-    version: Literal["evidence-attributed-revision-2.2"] = VERSION
+    version: Literal["evidence-attributed-revision-2.3"] = VERSION
     cost_unit: Literal["legacy_ordinal_units"] = "legacy_ordinal_units"
     audit_tokens: int = Field(default=2048, gt=0)
     reviewer_tokens: int = Field(default=512, gt=0)
@@ -75,6 +83,27 @@ class EvidenceAudit(StrictModel):
 class ReviewDecision(RevisionAction):
     remaining_value: str = Field(min_length=1, max_length=600)
     evidence_gap: str = Field(min_length=1, max_length=600)
+
+
+class ReviewAdjustment(StrictModel):
+    field: Literal["action", "option_id", "reason", "remaining_value", "evidence_gap"]
+    code: Literal[
+        "SAME_SELECTION_AS_INITIAL",
+        "KEEP_OPTION_MATCHES_INITIAL",
+        "EXPLANATION_TOO_LONG",
+        "EXPLANATION_INVALID_TYPE",
+        "EXPLANATION_EMPTY",
+    ]
+
+
+class QualityCheckStatus(StrictModel):
+    """Separate interface completion from still-unverified scientific quality."""
+
+    scientific_validity: Literal["not_independently_checked"] = "not_independently_checked"
+    evidence_fidelity: Literal["not_independently_checked"] = "not_independently_checked"
+    audit_assessment: Literal["model_judgment_only"] = "model_judgment_only"
+    audit_flagged_statement_ids: list[str] = Field(default_factory=list)
+    source_less_statement_ids: list[str] = Field(default_factory=list)
 
 
 class CostAccounting(StrictModel):
@@ -101,7 +130,7 @@ class CostAccounting(StrictModel):
 
 
 class RevisionResult(StrictModel):
-    version: Literal["evidence-attributed-revision-2.2"] = VERSION
+    version: Literal["evidence-attributed-revision-2.3"] = VERSION
     condition: Literal["AGENT_ANSWER_REVISION"] = "AGENT_ANSWER_REVISION"
     execution_kind: Literal["test", "model"]
     initial: InitialAnswer
@@ -112,6 +141,9 @@ class RevisionResult(StrictModel):
     reviewer_generation: GenerationReply | None = None
     answer_generation: GenerationReply | None = None
     action: ReviewDecision | None = None
+    reviewer_raw_object: dict[str, Any] | None = None
+    reviewer_adjustments: list[ReviewAdjustment] = Field(default_factory=list)
+    quality_checks: QualityCheckStatus = Field(default_factory=QualityCheckStatus)
     statements: dict[str, str]
     evidence_index: dict[str, dict[str, str]]
     excluded_statements: dict[str, str] = Field(default_factory=dict)
@@ -225,6 +257,52 @@ def validate_audit(
                 }
             )
     return retained
+
+
+def normalize_review_decision(
+    raw: dict[str, Any], options: dict[str, dict], initial_selected: list[str]
+) -> tuple[ReviewDecision, list[ReviewAdjustment]]:
+    """Resolve unambiguous actions and log ancillary explanation defects without retries."""
+    required = {"action", "option_id", "reason", "remaining_value", "evidence_gap"}
+    if set(raw) != required:
+        raise ValueError("REVIEW_FIELDS_MISMATCH")
+    obj = copy.deepcopy(raw)
+    adjustments: list[ReviewAdjustment] = []
+
+    def note(field: str, code: str) -> None:
+        adjustments.append(ReviewAdjustment(field=field, code=code))
+
+    if obj["action"] not in ("KEEP", "RESELECT"):
+        raise ValueError("UNKNOWN_REVIEW_ACTION")
+    oid = obj["option_id"]
+    if oid is not None:
+        if not isinstance(oid, str) or oid not in options:
+            raise ValueError("UNKNOWN_FINAL_OPTION")
+        same_set = set(options[oid]["selected"]) == set(initial_selected)
+        if obj["action"] == "KEEP" and not same_set:
+            raise ValueError("CONFLICTING_KEEP_OPTION")
+        if same_set:
+            note(
+                "action" if obj["action"] == "RESELECT" else "option_id",
+                "SAME_SELECTION_AS_INITIAL"
+                if obj["action"] == "RESELECT"
+                else "KEEP_OPTION_MATCHES_INITIAL",
+            )
+            obj.update(action="KEEP", option_id=None)
+    elif obj["action"] == "RESELECT":
+        raise ValueError("RESELECT_REQUIRES_OPTION")
+    for field, limit in (("reason", 400), ("remaining_value", 600), ("evidence_gap", 600)):
+        value = obj[field]
+        if not isinstance(value, str):
+            note(field, "EXPLANATION_INVALID_TYPE")
+            obj[field] = "Unavailable: the model did not provide a textual explanation."
+        elif not value.strip():
+            note(field, "EXPLANATION_EMPTY")
+            obj[field] = "Unavailable: the model provided an empty explanation."
+        elif len(value) > limit:
+            note(field, "EXPLANATION_TOO_LONG")
+            obj[field] = value[: limit - 3] + "..."
+    return ReviewDecision.model_validate(obj), adjustments
 
 
 def final_options(request: InputSelectionRequest, initial: InitialAnswer) -> dict[str, dict]:
@@ -380,6 +458,16 @@ def run_answer_revision(
             elif claim.verdict not in {"supported", "proposed"}:
                 excluded[sid] = f"AUDIT_{claim.verdict.upper()}"
         result["retained_statements"] = retained
+        result["quality_checks"] = QualityCheckStatus(
+            audit_flagged_statement_ids=[
+                sid
+                for sid, claim in audit.claims.items()
+                if claim.verdict in {"unsupported", "misused", "uncertain"}
+            ],
+            source_less_statement_ids=[
+                sid for sid, code in excluded.items() if code == "RETAINED_CLAIM_REQUIRES_SOURCE"
+            ],
+        )
         stage = "review"
         payload = {
             "question": request.question.text,
@@ -391,6 +479,10 @@ def run_answer_revision(
                 a.model_dump(mode="json", exclude={"source_uri"}) for a in request.assets
             ],
             "final_options": options,
+            "initial_option_id": next(
+                k for k, o in options.items() if set(o["selected"]) == set(initial.selected)
+            ),
+            "output_schema": ReviewDecision.model_json_schema(),
         }
         reply = GenerationReply.model_validate(
             generate(
@@ -404,7 +496,10 @@ def run_answer_revision(
         result["reviewer_generation"] = reply
         if reply.finish_reason != "eos":
             raise ValueError("REVIEW_TRUNCATED_OR_UNVERIFIED")
-        decision = ReviewDecision.model_validate(parse_object(reply.text))
+        raw_decision = parse_object(reply.text)
+        result["reviewer_raw_object"] = copy.deepcopy(raw_decision)
+        decision, adjustments = normalize_review_decision(raw_decision, options, initial.selected)
+        result["reviewer_adjustments"] = adjustments
         result["action"] = decision
         if decision.action == "KEEP":
             option = next(
@@ -414,8 +509,6 @@ def run_answer_revision(
             if decision.option_id not in options:
                 raise ValueError("UNKNOWN_FINAL_OPTION")
             option = options[decision.option_id]
-            if set(option["selected"]) == set(initial.selected):
-                raise ValueError("UNCHANGED_RESELECT_USE_KEEP")
         result.update(selected=option["selected"], costs=CostAccounting(**option["costs"]))
         stage = "acquisition"
         for modality in option["selected"]:

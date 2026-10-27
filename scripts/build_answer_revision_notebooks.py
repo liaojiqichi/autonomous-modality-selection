@@ -224,7 +224,7 @@ def build() -> dict:
     )
     settings = settings.replace(
         'RUN_LABEL = "heldout-four-modality-unified-descriptions-v2-001"',
-        'RUN_LABEL = "heldout-evidence-revision-v22-001"',
+        'RUN_LABEL = "heldout-evidence-revision-v23-001"',
     )
     loading = "".join(old[7]["source"])
     loading = loading.replace('if MODE == "prepare" and ', "if ")
@@ -244,7 +244,7 @@ def build() -> dict:
     target_setup = target_setup.replace(
         '"protocol": RECORD_VERSION,',
         '"protocol": RECORD_VERSION,\n'
-        '    "experiment_amendment": "evidence-attributed-revision-2.2",',
+        '    "experiment_amendment": "evidence-attributed-revision-2.3",',
     )
     evidence_source, experiment_source = current_execution_sources(old)
     notebook["cells"] = [

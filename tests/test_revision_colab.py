@@ -205,7 +205,7 @@ def test_blocked_resume_and_interrupted_journal(baseline: tuple, tmp_path: Path)
     destination = tmp_path / "results"
     records = run_target_revisions(ns, tmp_path / "source", destination, RevisionPolicy())
     saved_metadata = json.loads((destination / "revision_metadata.json").read_text())
-    assert saved_metadata["reviewer_prompt_version"] == "evidence-audit-and-selection-2.2"
+    assert saved_metadata["reviewer_prompt_version"] == "evidence-audit-and-selection-2.3"
     assert "reviewer_asset_amendment" not in saved_metadata
     descriptions = saved_metadata["asset_descriptions"]
     assert descriptions["scope"] == "all_selectors"
