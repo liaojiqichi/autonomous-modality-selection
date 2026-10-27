@@ -133,7 +133,6 @@ def test_audit_always_revises_and_overruns_survive(action: str, selected: list[s
         ("extra", "extra=\\['S99'\\]"),
         ("source", "UNKNOWN_EVIDENCE"),
         ("duplicate_source", "DUPLICATE_EVIDENCE"),
-        ("unsupported_retained", "RETAINED_CLAIM"),
     ],
 )
 def test_bad_audit_rejected(mutation: str, error: str) -> None:
@@ -270,3 +269,91 @@ def test_generated_baselines_no_iterative_and_resume(
     ]
     base.execute_nodes(runner, ns, nodes)
     assert all(p.read_bytes() == v for p, v in before.items())
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("**Proposed Checks & Evidence Basis**", True),
+        ("## Additional-data proposals", True),
+        ("__Methods__", True),
+        ("- **Floor check**: Compare supplied values.", False),
+        ("**The floor is flat.**", False),
+        ("A plain scientific statement", False),
+    ],
+)
+def test_explicit_heading_detection(text: str, expected: bool) -> None:
+    from autonomous_modality.evidence_revision import is_standalone_heading
+
+    assert is_standalone_heading(text) is expected
+
+
+def test_missing_sources_are_excluded_without_changing_raw_audit() -> None:
+    request, initial = fixture()
+    initial = initial.model_copy(update={"answer": "**Methods**\nA proposal.\nAn observation."})
+    request.assets[0].limitations = ["No age measurements supplied."]
+    payload = {
+        "claims": {
+            "S2": {"verdict": "proposed", "sources": [], "reason": "Proposed work."},
+            "S3": {"verdict": "supported", "sources": [], "reason": "Observation."},
+        }
+    }
+    calls = []
+
+    def generate(messages: list[dict], tokens: int) -> GenerationReply:
+        calls.append(messages)
+        if len(calls) == 1:
+            context = json.loads(messages[1]["content"][0]["text"])
+            assert context["required_statement_ids"] == ["S2", "S3"]
+            assert "S1" not in context["statements"]
+            assert context["selected_asset_capabilities"][0]["limitations"] == [
+                "No age measurements supplied."
+            ]
+            assert len(context["selected_asset_capabilities"]) == 1
+            return GenerationReply(text=json.dumps(payload), finish_reason="eos")
+        context = json.loads(messages[1]["content"][0]["text"])
+        assert context["retained_statements"] == []
+        assert context["removed_statement_count"] == 2
+        return GenerationReply(
+            text=json.dumps(
+                {
+                    "action": "KEEP",
+                    "option_id": None,
+                    "reason": "Correct the answer.",
+                    "remaining_value": "None retained",
+                    "evidence_gap": "Reassess supplied evidence",
+                }
+            ),
+            finish_reason="eos",
+        )
+
+    def answer(selected: list[str], retained: list[dict]) -> GenerationReply:
+        assert retained == []
+        return GenerationReply(text="Revised fixture answer", finish_reason="eos")
+
+    result = run_answer_revision(
+        request,
+        initial,
+        RevisionPolicy(),
+        lambda name: [{"type": "text", "text": "fixture evidence"}],
+        generate,
+        answer,
+        execution_kind="test",
+    )
+    assert result.status == "success"
+    assert result.audit.model_dump() == payload
+    assert result.statements["S1"] == "**Methods**"
+    assert result.excluded_statements == {
+        "S1": "STANDALONE_HEADING",
+        "S2": "RETAINED_CLAIM_REQUIRES_SOURCE",
+        "S3": "RETAINED_CLAIM_REQUIRES_SOURCE",
+    }
+    assert len(calls) == 2
+    assert RevisionResult.model_validate_json(result.model_dump_json()) == result
+
+
+def test_malformed_audit_json_is_still_rejected() -> None:
+    from autonomous_modality.evidence_revision import parse_object
+
+    with pytest.raises(json.JSONDecodeError):
+        parse_object('{"claims":')
