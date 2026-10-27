@@ -6,6 +6,8 @@ import pytest
 from pydantic import ValidationError
 
 from autonomous_modality.answer_revision import (
+    PROMPT,
+    PROMPT_VERSION,
     InitialAnswer,
     RevisionAction,
     RevisionPolicy,
@@ -95,6 +97,10 @@ def test_keep_has_no_answer_call(
     assert result.answer_origin == "initial"
     assert result.cumulative_access_cost == 3
     assert result.additional_access_cost == 0
+    assert seen[0]["content"][0]["text"] == PROMPT
+    assert PROMPT_VERSION == "answer-revision-evidence-retention-1.1"
+    assert "Do not treat replacement as addition" in PROMPT
+    assert "it does not\ncertify answer quality or correct errors" in PROMPT
     payload = json.loads(seen[1]["content"][0]["text"])
     assert payload["initial_answer"] == initial.answer
     assert payload["answer_requirements"] == ["Use supplied features"]

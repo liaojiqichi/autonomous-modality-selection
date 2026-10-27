@@ -16,6 +16,7 @@ from pydantic import Field
 
 from autonomous_modality.answer_revision import (
     PROMPT,
+    PROMPT_VERSION,
     InitialAnswer,
     RevisionPolicy,
     RevisionResult,
@@ -396,6 +397,7 @@ def run_target_revisions(
         "version": policy.version,
         "policy": policy.model_dump(mode="json"),
         "prompt": PROMPT,
+        "reviewer_prompt_version": PROMPT_VERSION,
         "base_config": namespace["CONFIG"],
         "runtime": namespace["REVISION_RUNTIME"],
         "revision_configuration": (

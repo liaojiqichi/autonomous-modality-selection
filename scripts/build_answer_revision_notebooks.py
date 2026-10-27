@@ -23,7 +23,7 @@ REVISION_REVIEW_TOKENS = 512
 EXTENSION_SETUP = """import gc
 import inspect
 
-from autonomous_modality.answer_revision import RevisionPolicy
+from autonomous_modality.answer_revision import PROMPT_VERSION, RevisionPolicy
 from autonomous_modality.modality_descriptions import ASSET_DESCRIPTION_VERSION
 from autonomous_modality.revision_colab import run_target_revisions
 
@@ -47,6 +47,7 @@ REVISION_RUNTIME = {
     "generation_source": inspect.getsource(generate_reply),
 }
 REVISION_FINGERPRINT = {
+    "reviewer_prompt_version": PROMPT_VERSION,
     "asset_description_version": ASSET_DESCRIPTION_VERSION,
     "asset_description_scope": "all_selectors",
     "policy": REVISION_POLICY.model_dump(mode="json"),
@@ -155,10 +156,10 @@ def build() -> dict:
     )
     settings = settings.replace(
         'RUN_LABEL = "heldout-four-modality-unified-descriptions-v2-001"',
-        'RUN_LABEL = "heldout-revision-baselines-unified-v2-001"',
+        'RUN_LABEL = "heldout-revision-baselines-retention-v1-001"',
     )
     settings = settings.replace(
-        "heldout-answer-revision-v1-001", "heldout-answer-revision-unified-v2-001"
+        "heldout-answer-revision-v1-001", "heldout-answer-revision-retention-v1-001"
     )
     loading = "".join(old[7]["source"])
     loading = loading.replace('if MODE == "prepare" and ', "if ")
